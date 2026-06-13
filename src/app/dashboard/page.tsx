@@ -354,6 +354,7 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
     projects: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'category', label: 'Category', type: 'select', options: ['Brand Audit', 'Campaign', 'Digital', 'Research'] },
+      { key: 'imageUrl', label: 'Image URL', type: 'text' },
       { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'tags', label: 'Tags (comma-separated)', type: 'text' },
       { key: 'order', label: 'Order', type: 'number' },
@@ -369,6 +370,7 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
     campaigns: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'subtitle', label: 'Subtitle', type: 'text' },
+      { key: 'imageUrl', label: 'Image URL', type: 'text' },
       { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'tags', label: 'Tags (comma-separated)', type: 'text' },
       { key: 'details', label: 'Details (JSON)', type: 'textarea' },
