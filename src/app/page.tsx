@@ -185,20 +185,20 @@ export default function Home() {
         ]);
 
         const [profileData, projectsData, expData, campData, skillsData, eduData] = await Promise.all([
-          profileRes.json(),
-          projectsRes.json(),
-          expRes.json(),
-          campRes.json(),
-          skillsRes.json(),
-          eduRes.json(),
+          profileRes.ok ? profileRes.json() : null,
+          projectsRes.ok ? projectsRes.json() : [],
+          expRes.ok ? expRes.json() : [],
+          campRes.ok ? campRes.json() : [],
+          skillsRes.ok ? skillsRes.json() : [],
+          eduRes.ok ? eduRes.json() : [],
         ]);
 
         setProfile(profileData);
-        setProjects(projectsData);
-        setExperiences(expData);
-        setCampaings(campData);
-        setSkillCategories(skillsData);
-        setEducation(eduData);
+        setProjects(Array.isArray(projectsData) ? projectsData : []);
+        setExperiences(Array.isArray(expData) ? expData : []);
+        setCampaings(Array.isArray(campData) ? campData : []);
+        setSkillCategories(Array.isArray(skillsData) ? skillsData : []);
+        setEducation(Array.isArray(eduData) ? eduData : []);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -232,6 +232,13 @@ export default function Home() {
 
   /* ---- Loading state ---- */
   if (loading) return <LoadingSkeleton />;
+  if (!profile) return (
+    <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-lg text-[#5a5550]">Loading portfolio...</p>
+      </div>
+    </div>
+  );
 
   const navLinks = [
     { id: 'about', label: 'About' },
