@@ -1070,7 +1070,7 @@ export default function PortfolioPage() {
         const [profileData, projectsData, expData, campData, skillsData, eduData] = await Promise.all([
           profileRes.ok ? profileRes.json() : null,
           projectsRes.ok ? projectsRes.json() : [],
-          projectsRes.ok ? projectsRes.json() : [],
+          expRes.ok ? expRes.json() : [],
           campRes.ok ? campRes.json() : [],
           skillsRes.ok ? skillsRes.json() : [],
           eduRes.ok ? eduRes.json() : [],
