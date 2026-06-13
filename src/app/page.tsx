@@ -175,10 +175,10 @@ const skillBarWidths: Record<string, Record<string, number>> = {
 };
 
 const projectImages: Record<string, string> = {
-  'maine': '/images/maine.jpg',
-  'pablo': '/images/pablo-abdo.jpg',
-  'pizza': '/images/pizza-station.jpg',
-  'ai': '/images/ai-business.jpg',
+  'maine': '/logos/maine.jpg',
+  'pablo': '/logos/pablo-abdo.jpg',
+  'pizza': '/logos/pizza-station.jpg',
+  'ai': '/logos/ai-business.jpg',
 };
 
 function getProjectImage(project: ProjectData): string {
@@ -187,7 +187,7 @@ function getProjectImage(project: ProjectData): string {
     if (titleLower.includes(key)) return img;
   }
   if (project.imageUrl) return project.imageUrl;
-  return '/images/hero-bg.jpg';
+  return '/logos/maine.jpg';
 }
 
 /* ------------------------------------------------------------------ */
