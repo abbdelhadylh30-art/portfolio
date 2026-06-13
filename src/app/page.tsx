@@ -1,15 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Mail,
   Phone,
   Linkedin,
-  ExternalLink,
-  Briefcase,
-  GraduationCap,
-  MapPin,
-  ChevronDown,
   ArrowRight,
   Menu,
   X,
@@ -18,6 +13,17 @@ import {
   Users,
   BarChart3,
   Sparkles,
+  Megaphone,
+  TrendingUp,
+  Handshake,
+  Globe,
+  Settings,
+  GraduationCap,
+  Briefcase,
+  ChevronDown,
+  ExternalLink,
+  Zap,
+  LayoutGrid,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -98,14 +104,14 @@ interface EducationData {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Color Constants — Navy & White Professional                        */
+/*  Colors — Navy & White Professional                                 */
 /* ------------------------------------------------------------------ */
 
 const colors = {
   navy: '#0a1628',
-  navyLight: '#0f2038',
+  navyLight: '#0f1d35',
   navyMid: '#162d50',
-  navyAccent: '#1a3560',
+  navyCard: '#111d33',
   gold: '#c8963e',
   goldLight: '#e8b85a',
   white: '#ffffff',
@@ -118,12 +124,16 @@ const colors = {
   gray800: '#2d3748',
 };
 
-const skillIcons: Record<string, string> = {
-  'Marketing & Campaigns': '📢',
-  'Digital & Paid Media': '📊',
-  'Business Development': '🤝',
-  'Analytics & Tools': '⚙️',
-  'Languages & Tools': '🌐',
+/* ------------------------------------------------------------------ */
+/*  Skill Icons — Lucide React Components instead of emojis            */
+/* ------------------------------------------------------------------ */
+
+const skillIconMap: Record<string, React.ReactNode> = {
+  'Marketing & Campaigns': <Megaphone size={20} />,
+  'Digital & Paid Media': <TrendingUp size={20} />,
+  'Business Development': <Handshake size={20} />,
+  'Analytics & Tools': <Settings size={20} />,
+  'Languages & Tools': <Globe size={20} />,
 };
 
 const skillBarWidths: Record<string, Record<string, number>> = {
@@ -133,18 +143,18 @@ const skillBarWidths: Record<string, Record<string, number>> = {
     'Brand Analysis': 70,
     'Campaign Planning': 72,
     'Content Strategy': 68,
-    'Brand Management': 60,
+    'Brand Management': 75,
   },
   'Digital & Paid Media': {
-    'Meta Ads Manager': 55,
-    'Social Media Strategy': 65,
-    'Performance Reporting': 72,
-    'SEO/SEM': 45,
-    'UGC Strategy': 60,
+    'Meta Ads Manager': 60,
+    'Social Media Strategy': 70,
+    'Performance Reporting': 65,
+    'SEO/SEM': 55,
+    'UGC Strategy': 72,
   },
   'Business Development': {
     'Market Research': 78,
-    'Competitive Benchmarking': 75,
+    'Competitive Benchmarking': 72,
     'Sales Presentations': 68,
     'Lead Generation': 65,
     'Stakeholder Comms': 70,
@@ -205,7 +215,7 @@ function Navigation({ activeSection }: { activeSection: string }) {
       background: 'rgba(10,22,40,0.95)',
       backdropFilter: 'blur(16px)',
       borderBottom: `1px solid rgba(200,150,62,0.15)`,
-      padding: '0 2.5rem',
+      padding: '0 1.5rem',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       height: '64px',
     }}>
@@ -217,8 +227,8 @@ function Navigation({ activeSection }: { activeSection: string }) {
         MM<span style={{ color: colors.gold }}>.</span>
       </a>
 
-      {/* Desktop */}
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }} className="hidden md:flex">
+      {/* Desktop nav */}
+      <div className="desktop-nav" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
         {links.map(l => (
           <button key={l.id} onClick={() => scrollTo(l.id)} style={{
             background: 'none', border: 'none', cursor: 'pointer',
@@ -240,8 +250,9 @@ function Navigation({ activeSection }: { activeSection: string }) {
       </div>
 
       {/* Mobile burger */}
-      <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)} style={{
+      <button className="mobile-burger" onClick={() => setMobileOpen(!mobileOpen)} style={{
         background: 'none', border: 'none', cursor: 'pointer', color: colors.white,
+        display: 'none',
       }}>
         {mobileOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -252,6 +263,7 @@ function Navigation({ activeSection }: { activeSection: string }) {
           position: 'fixed', top: 64, left: 0, right: 0, bottom: 0,
           background: colors.navy, padding: '2rem',
           display: 'flex', flexDirection: 'column', gap: '1.5rem',
+          zIndex: 99,
         }}>
           {links.map(l => (
             <button key={l.id} onClick={() => scrollTo(l.id)} style={{
@@ -263,6 +275,14 @@ function Navigation({ activeSection }: { activeSection: string }) {
               {l.label}
             </button>
           ))}
+          <button onClick={() => scrollTo('contact')} style={{
+            background: colors.gold, color: colors.navy,
+            fontFamily: 'inherit', fontSize: '0.95rem', fontWeight: 600,
+            padding: '0.75rem 1.5rem', borderRadius: '999px',
+            border: 'none', cursor: 'pointer', marginTop: '1rem',
+          }}>
+            Let&apos;s talk
+          </button>
         </div>
       )}
     </nav>
@@ -279,18 +299,16 @@ function HeroSection({ profile }: { profile: ProfileData }) {
   const lastName = nameParts.slice(1).join(' ');
 
   return (
-    <section id="hero" style={{
+    <section id="hero" className="hero-section" style={{
       minHeight: '100vh',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: '4rem',
       alignItems: 'center',
-      paddingTop: '8rem',
-      paddingBottom: '4rem',
       maxWidth: 1080,
       margin: '0 auto',
       padding: '8rem 2.5rem 4rem',
-    }} className="hero-grid">
+    }}>
       {/* Left */}
       <div>
         <div style={{
@@ -309,7 +327,7 @@ function HeroSection({ profile }: { profile: ProfileData }) {
 
         <h1 style={{
           fontFamily: "'Syne', sans-serif",
-          fontSize: 'clamp(2.8rem, 5vw, 4.2rem)',
+          fontSize: 'clamp(2.4rem, 5vw, 4.2rem)',
           fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.04em',
           color: colors.white, marginBottom: '1.5rem',
         }}>
@@ -346,7 +364,7 @@ function HeroSection({ profile }: { profile: ProfileData }) {
       </div>
 
       {/* Right */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="hero-stats" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           {[
             { value: profile.stat1Value, label: profile.stat1Label, sub: profile.stat1Sub },
@@ -362,7 +380,7 @@ function HeroSection({ profile }: { profile: ProfileData }) {
             }} className="stat-card-hover">
               <div style={{
                 fontFamily: "'Syne', sans-serif",
-                fontSize: '2rem', fontWeight: 800, color: colors.white, letterSpacing: '-0.04em',
+                fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 800, color: colors.white, letterSpacing: '-0.04em',
               }}>
                 {stat.value}
               </div>
@@ -392,14 +410,6 @@ function HeroSection({ profile }: { profile: ProfileData }) {
           </cite>
         </div>
       </div>
-
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
-        .stat-card-hover:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-2px); }
-        @media (max-width: 768px) {
-          .hero-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
-        }
-      `}</style>
     </section>
   );
 }
@@ -424,7 +434,7 @@ function AboutSection({ profile }: { profile: ProfileData }) {
         About
       </div>
       <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '2.2rem',
+        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
       }}>
         Who I am
@@ -468,7 +478,7 @@ function AboutSection({ profile }: { profile: ProfileData }) {
       />
 
       {/* Principles grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+      <div className="principles-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
         {principles.map((p, i) => (
           <div key={i} style={{
             background: colors.navyLight,
@@ -487,10 +497,6 @@ function AboutSection({ profile }: { profile: ProfileData }) {
           </div>
         ))}
       </div>
-
-      <style>{`
-        .principle-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-2px); }
-      `}</style>
     </section>
   );
 }
@@ -508,7 +514,7 @@ function ExperienceSection({ experiences }: { experiences: ExperienceData[] }) {
         Experience
       </div>
       <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '2.2rem',
+        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '3rem',
       }}>
         Professional History
@@ -604,7 +610,7 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
         Work & Case Studies
       </div>
       <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '2.2rem',
+        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
       }}>
         Selected Projects
@@ -614,7 +620,7 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
       </p>
 
       {/* Project Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div className="projects-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {projects.map((project) => {
           const tags = project.tags ? project.tags.split(',').map(t => t.trim()) : [];
           const imgSrc = getProjectImage(project);
@@ -656,7 +662,7 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
 
               <div style={{ padding: '1.5rem' }}>
                 <h3 style={{
-                  fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1.1rem',
+                  fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1.05rem',
                   color: colors.white, marginBottom: '0.5rem', lineHeight: 1.3,
                 }}>
                   {project.title}
@@ -707,7 +713,7 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
 
           {/* Campaign details */}
           {selectedCampaign.details && selectedCampaign.details !== '{}' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+            <div className="campaign-details-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
               {(() => {
                 try {
                   const details = JSON.parse(selectedCampaign.details);
@@ -743,11 +749,6 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
           )}
         </div>
       )}
-
-      <style>{`
-        .project-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-3px); }
-        .project-card:hover img { transform: scale(1.05); }
-      `}</style>
     </section>
   );
 }
@@ -765,7 +766,7 @@ function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
         Capabilities
       </div>
       <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '2.2rem',
+        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
       }}>
         Skills Dashboard
@@ -774,11 +775,11 @@ function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
         A working snapshot of where I am today — honest, not inflated. The bars reflect demonstrated applied experience, not aspirational claims.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div className="skills-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
         {skills.map((cat) => {
           let skillList: string[] = [];
           try { skillList = JSON.parse(cat.skills); } catch { skillList = cat.skills.split(',').map(s => s.trim()); }
-          const icon = skillIcons[cat.name] || '📋';
+          const icon = skillIconMap[cat.name] || <LayoutGrid size={20} />;
           const barWidths = skillBarWidths[cat.name] || {};
 
           return (
@@ -788,7 +789,14 @@ function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
               borderRadius: 16, padding: '1.75rem',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <span style={{ fontSize: '1.5rem' }}>{icon}</span>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: 'rgba(200,150,62,0.12)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: colors.gold,
+                }}>
+                  {icon}
+                </div>
                 <h3 style={{
                   fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1rem',
                   color: colors.white,
@@ -843,7 +851,7 @@ function EducationSection({ education }: { education: EducationData[] }) {
         Education
       </div>
       <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '2.2rem',
+        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '3rem',
       }}>
         Academic Background
@@ -891,7 +899,7 @@ function EducationSection({ education }: { education: EducationData[] }) {
       ))}
 
       {/* Languages */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="lang-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
         {[
           { lang: 'Arabic', level: 'Native Proficiency' },
           { lang: 'English', level: 'C1 — Professional Proficiency' },
@@ -947,7 +955,7 @@ function ContactSection({ profile }: { profile: ProfileData }) {
         Contact
       </div>
       <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '2.2rem',
+        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
       }}>
         Let&apos;s build something.
@@ -956,7 +964,7 @@ function ContactSection({ profile }: { profile: ProfileData }) {
         Looking to hire, collaborate, or discuss a brief? I&apos;m available for entry-level roles and internships in marketing, media buying, and business development.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div className="contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
         {[
           { icon: <Mail size={20} />, label: 'Send an email', value: profile.email, href: `mailto:${profile.email}` },
           { icon: <Linkedin size={20} />, label: 'LinkedIn', value: 'LinkedIn Profile', href: `https://linkedin.com/in/${profile.linkedin}` },
@@ -984,10 +992,6 @@ function ContactSection({ profile }: { profile: ProfileData }) {
           </a>
         ))}
       </div>
-
-      <style>{`
-        .contact-card:hover { border-color: rgba(200,150,62,0.35) !important; transform: translateY(-2px); }
-      `}</style>
     </section>
   );
 }
@@ -1013,7 +1017,8 @@ function Footer({ profile }: { profile: ProfileData }) {
         padding: '0.4rem 1rem', fontSize: '0.78rem', color: colors.gold,
         cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
       }}>
-        ↑ Back to top
+        <ChevronDown size={14} style={{ transform: 'rotate(180deg)', verticalAlign: 'middle', marginRight: 4 }} />
+        Back to top
       </button>
     </footer>
   );
@@ -1065,7 +1070,7 @@ export default function PortfolioPage() {
         const [profileData, projectsData, expData, campData, skillsData, eduData] = await Promise.all([
           profileRes.ok ? profileRes.json() : null,
           projectsRes.ok ? projectsRes.json() : [],
-          expRes.ok ? expRes.json() : [],
+          projectsRes.ok ? projectsRes.json() : [],
           campRes.ok ? campRes.json() : [],
           skillsRes.ok ? skillsRes.json() : [],
           eduRes.ok ? eduRes.json() : [],
@@ -1166,6 +1171,62 @@ export default function PortfolioPage() {
       <Divider />
       <ContactSection profile={profile} />
       <Footer profile={profile} />
+
+      {/* Global responsive styles */}
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+        .stat-card-hover:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-2px); }
+        .principle-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-2px); }
+        .project-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-3px); }
+        .project-card:hover img { transform: scale(1.05); }
+        .contact-card:hover { border-color: rgba(200,150,62,0.35) !important; transform: translateY(-2px); }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+          .hero-section {
+            grid-template-columns: 1fr !important;
+            gap: 2.5rem !important;
+            padding: 7rem 1.25rem 3rem !important;
+          }
+          .hero-stats {
+            order: -1;
+          }
+          .desktop-nav {
+            display: none !important;
+          }
+          .mobile-burger {
+            display: block !important;
+          }
+          section {
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+          }
+          .projects-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .skills-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .lang-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .campaign-details-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .contact-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .hero-section h1 {
+            font-size: 2rem !important;
+          }
+          .hero-section .stat-card-hover {
+            padding: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,7 +1,25 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Image as ImageIcon, Upload, X } from 'lucide-react';
+import {
+  Image as ImageIcon,
+  Upload,
+  X,
+  User,
+  FolderOpen,
+  Briefcase,
+  Star,
+  BarChart3,
+  GraduationCap,
+  ExternalLink,
+  LogOut,
+  Menu,
+  ChevronLeft,
+  Plus,
+  Save,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -85,7 +103,6 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (url: strin
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview immediately
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -155,7 +172,6 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (url: strin
         onChange={handleUpload}
         style={{ display: 'none' }}
       />
-      {/* Also allow URL input */}
       <div style={{ marginTop: 8 }}>
         <input
           value={value || ''}
@@ -182,6 +198,7 @@ export default function DashboardPage() {
   const [loginError, setLoginError] = useState('');
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('dashboard_token');
@@ -216,15 +233,27 @@ export default function DashboardPage() {
 
   if (!isLoggedIn) {
     return (
-      <div style={{ minHeight: '100vh', background: c.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', background: c.navy, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
         <div style={{
           background: c.navyLight, border: `1px solid ${c.border}`,
           borderRadius: 20, padding: '2.5rem', width: '100%', maxWidth: 420,
         }}>
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: c.white, marginBottom: 4 }}>
-            Dashboard <span style={{ color: c.gold }}>Panel</span>
-          </h1>
-          <p style={{ color: c.gray400, fontSize: '0.85rem', marginBottom: '1.5rem' }}>Sign in to manage your portfolio content</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.5rem' }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12,
+              background: 'rgba(200,150,62,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: c.gold,
+            }}>
+              <User size={24} />
+            </div>
+            <div>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.5rem', fontWeight: 700, color: c.white, marginBottom: 2 }}>
+                Dashboard <span style={{ color: c.gold }}>Panel</span>
+              </h1>
+              <p style={{ color: c.gray400, fontSize: '0.8rem' }}>Sign in to manage your portfolio</p>
+            </div>
+          </div>
           {loginError && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '1rem' }}>{loginError}</p>}
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>Username</label>
@@ -254,8 +283,9 @@ export default function DashboardPage() {
           <button onClick={handleLogin} style={{
             width: '100%', padding: '10px 0', background: c.gold, color: c.navy,
             borderRadius: 8, fontWeight: 600, fontSize: '0.9rem', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
-            Sign In
+            <Save size={16} /> Sign In
           </button>
         </div>
       </div>
@@ -263,21 +293,59 @@ export default function DashboardPage() {
   }
 
   const navItems = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'projects', label: 'Projects', icon: '📁' },
-    { id: 'experiences', label: 'Experience', icon: '💼' },
-    { id: 'campaigns', label: 'Campaigns', icon: '⭐' },
-    { id: 'skills', label: 'Skills', icon: '📊' },
-    { id: 'education', label: 'Education', icon: '🎓' },
+    { id: 'profile', label: 'Profile', icon: <User size={18} /> },
+    { id: 'projects', label: 'Projects', icon: <FolderOpen size={18} /> },
+    { id: 'experiences', label: 'Experience', icon: <Briefcase size={18} /> },
+    { id: 'campaigns', label: 'Campaigns', icon: <Star size={18} /> },
+    { id: 'skills', label: 'Skills', icon: <BarChart3 size={18} /> },
+    { id: 'education', label: 'Education', icon: <GraduationCap size={18} /> },
   ];
+
+  const handleNavClick = (id: string) => {
+    setCurrentPage(id);
+    setSidebarOpen(false);
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: c.navy, display: 'flex' }}>
+      {/* Mobile top bar */}
+      <div className="dashboard-mobile-topbar" style={{
+        display: 'none',
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 90,
+        background: 'rgba(10,22,40,0.95)', backdropFilter: 'blur(16px)',
+        borderBottom: `1px solid ${c.border}`,
+        padding: '0 1rem', height: 56,
+        alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.1rem', fontWeight: 800, color: c.white }}>
+          MM<span style={{ color: c.gold }}>.</span> Dashboard
+        </div>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
+          background: 'none', border: 'none', cursor: 'pointer', color: c.white,
+        }}>
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Sidebar overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="dashboard-sidebar-overlay"
+          style={{
+            display: 'none',
+            position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.7)', zIndex: 89,
+          }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div style={{
+      <div className="dashboard-sidebar" style={{
         width: 256, background: c.navyLight, borderRight: `1px solid ${c.border}`,
         padding: '1.5rem', display: 'flex', flexDirection: 'column',
         position: 'fixed', top: 0, left: 0, bottom: 0, overflowY: 'auto',
+        zIndex: 91,
+        transition: 'transform 0.3s ease',
       }}>
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.2rem', fontWeight: 800, color: c.white, marginBottom: 4, padding: '0 0.5rem' }}>
           MM<span style={{ color: c.gold }}>.</span> Dashboard
@@ -287,7 +355,7 @@ export default function DashboardPage() {
           {navItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setCurrentPage(item.id)}
+              onClick={() => handleNavClick(item.id)}
               style={{
                 width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 8,
                 fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10,
@@ -297,7 +365,7 @@ export default function DashboardPage() {
                 fontWeight: currentPage === item.id ? 600 : 400,
               }}
             >
-              <span>{item.icon}</span> {item.label}
+              {item.icon} {item.label}
             </button>
           ))}
         </div>
@@ -307,20 +375,20 @@ export default function DashboardPage() {
             fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10,
             color: c.gray400, textDecoration: 'none', transition: 'all 0.2s',
           }}>
-            🔗 View Portfolio
+            <ExternalLink size={18} /> View Portfolio
           </a>
           <button onClick={handleLogout} style={{
             width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 8,
             fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10,
             color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer',
           }}>
-            🚪 Sign Out
+            <LogOut size={18} /> Sign Out
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div style={{ marginLeft: 256, flex: 1, padding: '2rem' }}>
+      <div className="dashboard-main" style={{ marginLeft: 256, flex: 1, padding: '2rem' }}>
         <div style={{
           background: c.navyLight, border: `1px solid ${c.border}`,
           borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem',
@@ -332,7 +400,25 @@ export default function DashboardPage() {
         <ContentArea page={currentPage} />
       </div>
 
-      <style>{`@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }`}</style>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+
+        @media (max-width: 768px) {
+          .dashboard-mobile-topbar {
+            display: flex !important;
+          }
+          .dashboard-main {
+            margin-left: 0 !important;
+            padding: 5rem 1rem 2rem !important;
+          }
+          .dashboard-sidebar {
+            transform: translateX(-100%);
+          }
+          .dashboard-sidebar.open {
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -439,8 +525,9 @@ function ProfileEditor() {
           marginTop: '1rem', padding: '10px 24px', background: c.gold, color: c.navy,
           borderRadius: 8, fontWeight: 600, fontSize: '0.9rem', border: 'none', cursor: 'pointer',
           opacity: saving ? 0.5 : 1,
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          {saving ? 'Saving...' : 'Save Changes'}
+          <Save size={16} /> {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>
@@ -585,8 +672,9 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
         <button onClick={openAdd} style={{
           padding: '10px 20px', background: c.gold, color: c.navy,
           borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          + Add New
+          <Plus size={16} /> Add New
         </button>
       </div>
 
@@ -604,7 +692,7 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
             onMouseEnter={e => e.currentTarget.style.borderColor = c.borderHover}
             onMouseLeave={e => e.currentTarget.style.borderColor = c.border}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {hasImage && item.imageUrl && (
                   <div style={{
@@ -624,15 +712,17 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
                 <button onClick={() => openEdit(item)} style={{
                   padding: '6px 12px', fontSize: '0.75rem', background: c.inputBg,
                   border: `1px solid ${c.border}`, borderRadius: 6, color: c.white, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}>
-                  Edit
+                  <Pencil size={12} /> Edit
                 </button>
                 <button onClick={() => handleDelete(item.id, item[titleKey])} style={{
                   padding: '6px 12px', fontSize: '0.75rem',
                   border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6,
                   color: '#ef4444', background: 'transparent', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}>
-                  Delete
+                  <Trash2 size={12} /> Delete
                 </button>
               </div>
             </div>
@@ -658,15 +748,23 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.8)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+          padding: '1rem',
         }} onClick={() => { setShowForm(false); setEditItem(null); }}>
           <div style={{
             background: c.navyLight, border: `1px solid ${c.border}`,
             borderRadius: 20, padding: '2rem', width: '100%', maxWidth: 520,
             maxHeight: '90vh', overflowY: 'auto',
           }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: 600, color: c.white, marginBottom: '1.5rem' }}>
-              {editItem ? 'Edit Item' : 'Add New Item'}
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: 600, color: c.white }}>
+                {editItem ? 'Edit Item' : 'Add New Item'}
+              </h3>
+              <button onClick={() => { setShowForm(false); setEditItem(null); }} style={{
+                background: 'none', border: 'none', cursor: 'pointer', color: c.gray400,
+              }}>
+                <X size={20} />
+              </button>
+            </div>
             {fields.map(f => (
               <div key={f.key} style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>{f.label}</label>
@@ -716,8 +814,9 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
               <button onClick={handleSave} style={{
                 padding: '10px 20px', background: c.gold, color: c.navy,
                 borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                Save
+                <Save size={16} /> Save
               </button>
             </div>
           </div>

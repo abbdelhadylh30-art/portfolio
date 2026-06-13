@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,12 +27,25 @@ export const metadata: Metadata = {
     "Digital Marketing",
   ],
   authors: [{ name: "Mohamed Medhat Ahmed" }],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Portfolio Dashboard",
+  },
   openGraph: {
     title: "Mohamed Medhat Ahmed — Marketing & Business Development",
     description:
       "Marketing & Business Development Specialist with experience across FMCG, B2B, and digital industries.",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a1628",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -42,11 +55,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/icons/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0B1120] text-white`}
       >
         {children}
         <Toaster />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
