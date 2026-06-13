@@ -175,10 +175,10 @@ const skillBarWidths: Record<string, Record<string, number>> = {
 };
 
 const projectImages: Record<string, string> = {
-  'maine': '/logos/maine.jpg',
-  'pablo': '/logos/pablo-abdo.jpg',
-  'pizza': '/logos/pizza-station.jpg',
-  'ai': '/logos/ai-business.jpg',
+  'maine': '/logos/maine-logo.png',
+  'pablo': '/logos/pablo-abdo-logo.png',
+  'pizza': '/logos/pizza-station-logo.png',
+  'ai': '/logos/ai-business-logo.png',
 };
 
 function getProjectImage(project: ProjectData): string {
@@ -187,7 +187,7 @@ function getProjectImage(project: ProjectData): string {
     if (titleLower.includes(key)) return img;
   }
   if (project.imageUrl) return project.imageUrl;
-  return '/logos/maine.jpg';
+  return '/logos/ai-business-logo.png';
 }
 
 /* ------------------------------------------------------------------ */
@@ -632,21 +632,29 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
             }} onClick={() => setActiveProject(activeProject === project.id ? null : project.id)}
               className="project-card"
             >
-              {/* Project Image */}
+              {/* Project Image / Logo */}
               <div style={{
                 width: '100%', height: 200, position: 'relative', overflow: 'hidden',
+                background: imgSrc.endsWith('.png')
+                  ? 'linear-gradient(135deg, #0d1f3c 0%, #142952 100%)'
+                  : colors.navyLight,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <img
                   src={imgSrc}
                   alt={project.title}
                   style={{
-                    width: '100%', height: '100%', objectFit: 'cover',
+                    width: imgSrc.endsWith('.png') ? '60%' : '100%',
+                    height: imgSrc.endsWith('.png') ? '60%' : '100%',
+                    objectFit: imgSrc.endsWith('.png') ? 'contain' : 'cover',
                     transition: 'transform 0.4s',
                   }}
                 />
                 <div style={{
                   position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to bottom, transparent 40%, rgba(10,22,40,0.9))',
+                  background: imgSrc.endsWith('.png')
+                    ? 'linear-gradient(to bottom, transparent 60%, rgba(10,22,40,0.9))'
+                    : 'linear-gradient(to bottom, transparent 40%, rgba(10,22,40,0.9))',
                 }} />
                 {/* Category badge */}
                 <div style={{

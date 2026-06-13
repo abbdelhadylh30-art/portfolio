@@ -698,8 +698,14 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
                   <div style={{
                     width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
                     border: `1px solid ${c.border}`,
+                    background: String(item.imageUrl).endsWith('.png') ? '#0d1f3c' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={item.imageUrl} alt="" style={{
+                      width: '100%', height: '100%',
+                      objectFit: String(item.imageUrl).endsWith('.png') ? 'contain' : 'cover',
+                      padding: String(item.imageUrl).endsWith('.png') ? 4 : 0,
+                    }} />
                   </div>
                 )}
                 <div>
