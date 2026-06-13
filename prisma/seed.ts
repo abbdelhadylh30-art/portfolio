@@ -1,3 +1,6 @@
+// Set DATABASE_URL before any imports so Prisma Client picks it up
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres.trklgpgtctwiibgeicjx:Medhat23568914@aws-0-eu-west-1.pooler.supabase.com:5432/postgres';
+
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -14,9 +17,13 @@ async function main() {
       email: 'Mohamed.ahmed9009mm@gmail.com',
       phone: '+20 112 535 3053',
       linkedin: 'mohamed-ahmed-210b41394',
-      bio: "I'm a marketing and business development professional with hands-on experience across FMCG, B2B, and digital industries. My work spans from executing below-the-line campaigns and supervising sales teams to conducting brand audits and designing creative campaign concepts for F&B brands.\n\nWith a dual degree in Marketing & International Business from the University of Greenwich and MSA University, I combine academic rigour with practical execution. I believe the best marketing strategies are built on solid research, creative storytelling, and measurable outcomes.\n\nWhether it's analysing competitor positioning, designing a World Cup newspaper campaign, or building a referral-loop mechanic for a pizza chain, I approach every project with the same principle: understand the problem deeply, then solve it creatively.",
+      bio: `I'm a dual-degree Marketing & International Business graduate from MSA University and the University of Greenwich, with hands-on experience spanning digital campaign support, B2B business development, client relationship management, and team leadership.
+
+My career has moved across industries — from managing BTL promotional campaigns for investment products at Mining City, to client data analysis at a confidential marketing operations firm, to internships in brand support, business development, and operations. Each step has sharpened my ability to handle multiple workflows simultaneously, synthesize data into decisions, and coordinate across teams and vendors.
+
+Outside the desk, I invest time into understanding the Egyptian and regional marketing ecosystem — studying campaigns, analyzing brand behaviour, and building case studies on brands I believe are doing something interesting.`,
       heroSubtitle: 'Marketing & Business Development',
-      quote: 'Understand the problem deeply, then solve it creatively.',
+      quote: 'Ownership-oriented. Execution-first. Every campaign, every data point, every stakeholder interaction — done with intent.',
       stat1Value: '2×',
       stat1Label: 'Degree holder',
       stat1Sub: 'Greenwich & MSA University',
@@ -32,35 +39,52 @@ async function main() {
     },
   });
 
-  // Create projects
+  // Create projects with real content from old portfolio
   const projects = [
+    {
+      category: 'Case Study',
+      title: 'Pablo & Abdo — Brand & Digital Presence Audit',
+      description: 'A comprehensive brand analysis asking: Is Pablo & Abdo reaching the right audience in the right way? Covered digital presence across Instagram (127K), TikTok (70K), and Facebook (55K), competitive mapping against 12+ F&B brands, SWOT breakdown, Meta Ads audit, and five concrete growth recommendations including an original campaign concept.',
+      tags: 'Competitive Analysis,Digital Audit,Meta Ads,Campaign Strategy,Deck Design',
+      imageUrl: '/images/pablo-abdo.jpg',
+      order: 1,
+      featured: true,
+    },
+    {
+      category: 'Campaign Concept',
+      title: 'The Origin Story — Pablo & Abdo Campaign',
+      description: "Original campaign concept built on GTA-style narrative: Pablo (modern city) meets Abdo (chaotic Cairo streets) through a digital glitch that merges two worlds — culminating in the birth of the restaurant. Designed for Reels, TikTok, and short-form series. Addresses the brand's untold origin story gap.",
+      tags: 'Brand Storytelling,Content Strategy,Social Media',
+      imageUrl: '/images/pablo-abdo.jpg',
+      order: 2,
+      featured: true,
+    },
     {
       category: 'Brand Audit',
       title: 'Maine — Brand Overview & Campaign Analysis',
       description: "A full audit of Maine's premium smash burger brand: business model, 4-6% engagement rate analysis, content mix breakdown (35% product, 28% reels, 12% UGC), competitor mapping against JJ's, 3 Diner, and Just Smash. Identified TikTok as an underutilized channel and designed a World Cup campaign with multi-touchpoint mechanics.",
       tags: 'Brand Audit,Competitive Analysis,Campaign Design',
-      order: 1,
-    },
-    {
-      category: 'Digital',
-      title: 'Pablo & Abdo — Digital Presence Audit',
-      description: "The core question: Is Pablo & Abdo reaching the right audience in the right way? Mapped digital presence across Instagram (127K), TikTok (70K), and Facebook (55K), competitive analysis against 12+ F&B brands in two categories, SWOT breakdown, Meta Ads audit, and identified an untapped origin story opportunity that became the GTA-style campaign concept.",
-      tags: 'Competitive Analysis,Digital Audit,Meta Ads',
-      order: 2,
+      imageUrl: '/images/maine.jpg',
+      order: 3,
+      featured: true,
     },
     {
       category: 'Campaign',
       title: 'Pizza Station — Strategy & Repositioning',
       description: "An audit of Egypt's first NY-style pizza chain (est. 2002). Identified critical issues — quality control complaints, visual identity overlap with competitors using the same red & white palette, and low campaign ROI despite prize incentives. Designed two campaign concepts: a viral referral-mechanic challenge and a BTS kitchen transparency series.",
       tags: 'Brand Audit,Competitive Analysis,Campaign Design',
-      order: 3,
+      imageUrl: '/images/pizza-station.jpg',
+      order: 4,
+      featured: true,
     },
     {
       category: 'Research',
       title: 'Impact of AI on Smart Business Solutions',
-      description: 'Research project exploring how artificial intelligence is transforming business operations, decision-making processes, and competitive strategy across industries.',
-      tags: 'Research,AI,Business Strategy',
-      order: 4,
+      description: 'Research paper evaluating AI adoption trends across business tools, their strategic impact on brand operations, and practical implementation recommendations. Structured analytical report with competitive and market intelligence synthesis.',
+      tags: 'Market Intelligence,Strategic Analysis,Research',
+      imageUrl: '/images/ai-business.jpg',
+      order: 5,
+      featured: true,
     },
   ];
 
@@ -72,46 +96,57 @@ async function main() {
     });
   }
 
-  // Create experiences
+  // Create experiences with real content
   const experiences = [
     {
       role: 'Customer Relationship Manager',
-      company: 'FMCG Sector',
-      period: '2023 — Present',
-      description: 'Managing key client relationships and driving customer retention strategies across the FMCG portfolio.',
-      highlights: 'Led CRM initiatives,Supervised 10+ team members,Implemented loyalty programs',
+      company: 'Confidential — Marketing Operations, Giza',
+      period: 'Sep 2023 — Feb 2025',
+      description: `Monitored and analysed client interaction data weekly, identifying trends and delivering actionable insights to team leadership — directly applicable to campaign performance monitoring.
+Managed concurrent operational workflows across multiple client accounts with structured records, task tracking, and timely resolution.
+Coordinated with internal teams and third-party vendors through structured communication channels to ensure alignment on deliverables.
+Promoted within 12 months based on consistent output quality and demonstrated accountability in a high-volume environment.`,
+      highlights: 'CRM,Analytics,Vendor Coordination',
       order: 1,
     },
     {
       role: 'Sales & Marketing Supervisor',
-      company: 'B2B Sector',
-      period: '2021 — 2023',
-      description: 'Supervised sales teams and executed below-the-line marketing campaigns for B2B clients.',
-      highlights: 'Campaign execution,Sales team leadership,Client acquisition',
+      company: 'Mining City, Cairo',
+      period: 'Nov 2019 — Dec 2020',
+      description: `Planned and executed BTL promotional campaigns for investment products, managing full delivery from strategy through on-ground activation.
+Led a team of 10, setting performance targets, tracking KPIs, and ensuring brand messaging consistency across all promotional materials.
+Conducted competitive market analysis to identify positioning opportunities and inform campaign direction.
+Produced regular performance reports summarising team and campaign metrics to support senior-level decision-making.`,
+      highlights: 'BTL Campaigns,Team Leadership,KPI Tracking',
       order: 2,
     },
     {
       role: 'Marketing Intern',
-      company: 'Digital Agency',
-      period: '2020 — 2021',
-      description: 'Gained hands-on experience in digital marketing, social media management, and brand audits.',
-      highlights: 'Social media management,Brand audits,Content creation',
+      company: 'Elsewedy Trading Enterprises, Cairo',
+      period: 'Jun 2023 — Jul 2023',
+      description: `Supported the brand team in planning and deploying paid advertising campaigns across digital channels.
+Conducted competitive intelligence research to identify market opportunities and emerging consumer trends.
+Contributed customer acquisition ideas that were adopted into the team's promotional strategy.`,
+      highlights: 'Paid Ads,Competitive Research,Campaign Support',
       order: 3,
     },
     {
       role: 'Business Development Intern',
-      company: 'Corporate',
-      period: '2019 — 2020',
-      description: 'Supported business development activities including market research and competitor analysis.',
-      highlights: 'Market research,Competitor analysis,Strategic planning',
+      company: 'Scientific and Trading, Cairo',
+      period: 'Feb 2023 — Mar 2023',
+      description: `Conducted market research and competitor benchmarking to support brand positioning and sales initiatives.
+Assisted in preparing marketing and sales presentations for external partners and prospects.
+Supported lead generation activities using a structured, data-driven approach to prospect identification.`,
+      highlights: 'Market Research,BD,Pitch Support',
       order: 4,
     },
     {
       role: 'Operations Intern',
-      company: 'Operations',
-      period: '2018 — 2019',
-      description: 'Gained foundational understanding of operational processes and supply chain management.',
-      highlights: 'Process optimization,Supply chain,Quality control',
+      company: 'Xerox IBSX, Cairo',
+      period: 'May 2022 — Jun 2022',
+      description: `Coordinated internal meetings, communications, and cross-departmental administrative workflows.
+Maintained organised documentation and file systems, contributing to measurable improvements in operational efficiency.`,
+      highlights: 'Operations,Documentation,Process Improvement',
       order: 5,
     },
   ];
@@ -124,47 +159,47 @@ async function main() {
     });
   }
 
-  // Create campaigns
+  // Create campaigns with real content
   const campaigns = [
     {
-      title: '"أخبار كأس العالم" — World Cup Newspaper',
-      subtitle: 'Maine World Cup Campaign',
-      description: 'A branded newspaper distributed during the World Cup tournament, featuring match updates alongside hidden discount codes for Maine. Each edition included a prediction draw mechanic to drive repeat visits throughout the tournament.',
-      projectId: 'project-1',
-      tags: 'Print + Digital,Footfall Driver,Tournament-Length Engagement',
+      title: 'The Origin Story — GTA-Style Narrative Campaign',
+      subtitle: 'Pablo & Abdo Brand Narrative',
+      description: "A multi-format campaign concept anchored in the brand's untapped GTA DNA. Two characters from parallel worlds — modern and chaotic — collide through a digital glitch to create something new together. Designed to go viral through relatability, cultural duality, and serialised short-form content.",
+      projectId: 'project-2',
+      tags: 'TikTok Series,Instagram Reels,Brand Narrative',
       details: JSON.stringify({
-        objective: 'Awareness + Footfall',
-        format: 'Branded Newspaper',
-        mechanic: 'Hidden Discount',
-        retention: 'Prediction Draw',
+        Objective: 'Brand Awareness',
+        Format: 'Short-Film Series',
+        Channels: 'TikTok · IG · FB',
+        'UGC Potential': 'High — shareable',
       }),
       order: 1,
     },
     {
-      title: 'The Origin Story — GTA-Style Narrative Campaign',
-      subtitle: 'Pablo & Abdo Brand Narrative',
-      description: 'A GTA-style short film series telling the origin story of Pablo & Abdo. Designed for TikTok and Instagram Reels, each episode reveals a chapter of the founders\' journey, creating shareable content with high UGC potential.',
-      projectId: 'project-2',
-      tags: 'TikTok Series,Instagram Reels,Brand Narrative',
+      title: '"أخبار كأس العالم" — World Cup Newspaper',
+      subtitle: 'Maine World Cup Campaign',
+      description: 'A branded newspaper distributed during the World Cup tournament, featuring match updates alongside hidden discount codes for Maine. Each edition included a prediction draw mechanic to drive repeat visits throughout the tournament.',
+      projectId: 'project-3',
+      tags: 'Print + Digital,Footfall Driver,Tournament-Length Engagement',
       details: JSON.stringify({
-        objective: 'Brand Awareness',
-        format: 'Short-Film Series',
-        channels: 'TikTok · IG · FB',
-        ugcPotential: 'High — Shareable',
+        Objective: 'Awareness + Footfall',
+        Format: 'Branded Newspaper',
+        Mechanic: 'Hidden Discount',
+        Retention: 'Prediction Draw',
       }),
       order: 2,
     },
     {
       title: '"طلع المستخبي" — The Hidden Pizza Challenge',
       subtitle: 'Pizza Station Referral Campaign',
-      description: 'A split-screen interactive challenge: find the hidden small pizza inside a larger Pizza Station image to unlock a 10% discount. Each solver receives a unique promo code they can share with friends — friends who solve it also get discounts, chained up to 70% off, creating an organic referral loop. The audience names the promo codes themselves, building ownership and investment in the campaign. Complemented by "Ticket to Pizza" — a 60-second BTS kitchen series tackling quality trust issues head-on.',
-      projectId: 'project-3',
+      description: 'A split-screen interactive challenge: find the hidden small pizza inside a larger Pizza Station image to unlock a 10% discount. Each solver receives a unique promo code they can share with friends — friends who solve it also get discounts, chained up to 70% off, creating an organic referral loop. Complemented by "Ticket to Pizza" — a 60-second BTS kitchen series tackling quality trust issues head-on.',
+      projectId: 'project-4',
       tags: 'Interactive,Referral Mechanic,Viral Challenge',
       details: JSON.stringify({
-        objective: 'Footfall + Referral',
-        format: 'Interactive Challenge',
-        mechanic: 'Hidden Discount + Referral Loop',
-        trust: 'BTS Kitchen Series',
+        Objective: 'Footfall + Referral',
+        Format: 'Interactive Challenge',
+        Mechanic: 'Hidden Discount + Referral Loop',
+        Trust: 'BTS Kitchen Series',
       }),
       order: 3,
     },
@@ -178,27 +213,32 @@ async function main() {
     });
   }
 
-  // Create skill categories
+  // Create skill categories with real content
   const skillCategories = [
     {
       name: 'Marketing & Campaigns',
-      skills: JSON.stringify(['Brand Audits', 'Campaign Design', 'Content Strategy', 'BTL Execution', 'Competitive Analysis', 'SWOT Analysis']),
+      skills: JSON.stringify(['BTL Campaign Execution', 'Campaign Strategy', 'Brand Analysis', 'Campaign Planning', 'Content Strategy', 'Brand Management']),
       order: 1,
     },
     {
       name: 'Digital & Paid Media',
-      skills: JSON.stringify(['Meta Ads', 'Social Media Management', 'SEO/SEM', 'TikTok Marketing', 'UGC Strategy', 'Influencer Outreach']),
+      skills: JSON.stringify(['Meta Ads Manager', 'Social Media Strategy', 'Performance Reporting', 'SEO/SEM', 'UGC Strategy']),
       order: 2,
     },
     {
       name: 'Business Development',
-      skills: JSON.stringify(['Client Relations', 'Market Research', 'Lead Generation', 'Strategic Partnerships', 'Pitch Decks', 'Proposal Writing']),
+      skills: JSON.stringify(['Market Research', 'Competitive Benchmarking', 'Sales Presentations', 'Lead Generation', 'Stakeholder Comms']),
       order: 3,
     },
     {
       name: 'Analytics & Tools',
-      skills: JSON.stringify(['Google Analytics', 'Meta Business Suite', 'Excel/Sheets', 'Canva', 'PowerPoint', 'CRM Systems']),
+      skills: JSON.stringify(['Microsoft Excel', 'PowerPoint / Decks', 'KPI Tracking', 'Data Analysis', 'Trend Analysis']),
       order: 4,
+    },
+    {
+      name: 'Languages & Tools',
+      skills: JSON.stringify(['Arabic (Native)', 'English (C1)', 'PowerPoint', 'Word']),
+      order: 5,
     },
   ];
 
@@ -210,13 +250,13 @@ async function main() {
     });
   }
 
-  // Create education
+  // Create education with real content
   const education = [
     {
       degree: 'Dual Degree — Marketing & International Business',
-      institution: 'University of Greenwich & MSA University',
-      year: 'Graduated',
-      details: 'Combined academic rigour in marketing strategy and international business with practical application through live projects and internships.',
+      institution: 'University of Greenwich / MSA University',
+      year: '2019 — 2024',
+      details: 'Brand Management · Marketing Strategy · Consumer Behaviour · Market Research · Digital Marketing · Financial Management · International Business',
       order: 1,
     },
   ];
@@ -229,7 +269,7 @@ async function main() {
     });
   }
 
-  // Create default admin user (password: admin123)
+  // Create default admin user
   await prisma.adminUser.upsert({
     where: { username: 'admin' },
     update: {},

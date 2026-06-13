@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Image as ImageIcon, Upload, X } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -31,16 +32,35 @@ interface ProfileData {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Colors — Navy & Gold                                               */
+/* ------------------------------------------------------------------ */
+
+const c = {
+  navy: '#0a1628',
+  navyLight: '#0f2038',
+  navyMid: '#162d50',
+  gold: '#c8963e',
+  goldLight: '#e8b85a',
+  white: '#ffffff',
+  gray400: '#8b95a8',
+  gray600: '#5a6478',
+  surface: '#111d33',
+  inputBg: '#0d1a2e',
+  border: 'rgba(200,150,62,0.15)',
+  borderHover: 'rgba(200,150,62,0.35)',
+};
+
+/* ------------------------------------------------------------------ */
 /*  Auth                                                               */
 /* ------------------------------------------------------------------ */
 
 let authToken = '';
 
 async function api(endpoint: string, options: RequestInit = {}) {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
+  const isFormData = options.body instanceof FormData;
+  const headers: Record<string, string> = isFormData
+    ? { ...(options.headers as Record<string, string>) }
+    : { 'Content-Type': 'application/json', ...(options.headers as Record<string, string>) };
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
   const res = await fetch(endpoint, { ...options, headers });
@@ -50,6 +70,106 @@ async function api(endpoint: string, options: RequestInit = {}) {
     throw new Error(err.error || 'Request failed');
   }
   return res.json();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Image Upload Component                                             */
+/* ------------------------------------------------------------------ */
+
+function ImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(value || '');
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await api('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      onChange(result.imageUrl);
+      setPreview(result.imageUrl);
+    } catch (err: any) {
+      alert('Upload failed: ' + err.message);
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div>
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        style={{
+          width: '100%', height: 160, borderRadius: 12,
+          border: `2px dashed ${c.border}`, cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          background: c.inputBg, overflow: 'hidden', position: 'relative',
+          transition: 'border-color 0.2s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.borderColor = c.borderHover)}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = c.border)}
+      >
+        {preview ? (
+          <>
+            <img src={preview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{
+              position: 'absolute', inset: 0, background: 'rgba(10,22,40,0.5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: 0, transition: 'opacity 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0'}
+            >
+              <span style={{ color: c.white, fontSize: '0.85rem', fontWeight: 500 }}>
+                {uploading ? 'Uploading...' : 'Click to change'}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <Upload size={24} style={{ color: c.gold, marginBottom: 8 }} />
+            <span style={{ fontSize: '0.85rem', color: c.gray400 }}>
+              {uploading ? 'Uploading...' : 'Click to upload image'}
+            </span>
+            <span style={{ fontSize: '0.72rem', color: c.gray600, marginTop: 4 }}>
+              JPEG, PNG, GIF, WebP — Max 5MB
+            </span>
+          </>
+        )}
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleUpload}
+        style={{ display: 'none' }}
+      />
+      {/* Also allow URL input */}
+      <div style={{ marginTop: 8 }}>
+        <input
+          value={value || ''}
+          onChange={e => { onChange(e.target.value); setPreview(e.target.value); }}
+          placeholder="Or paste an image URL..."
+          style={{
+            width: '100%', padding: '8px 12px', borderRadius: 8,
+            background: c.inputBg, border: `1px solid ${c.border}`,
+            color: c.white, fontSize: '0.82rem', outline: 'none',
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -96,29 +216,45 @@ export default function DashboardPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-10 w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-2">Dashboard <span className="text-emerald-500">Panel</span></h1>
-          <p className="text-gray-400 text-sm mb-6">Sign in to manage your portfolio content</p>
-          {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">Username</label>
+      <div style={{ minHeight: '100vh', background: c.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          background: c.navyLight, border: `1px solid ${c.border}`,
+          borderRadius: 20, padding: '2.5rem', width: '100%', maxWidth: 420,
+        }}>
+          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: c.white, marginBottom: 4 }}>
+            Dashboard <span style={{ color: c.gold }}>Panel</span>
+          </h1>
+          <p style={{ color: c.gray400, fontSize: '0.85rem', marginBottom: '1.5rem' }}>Sign in to manage your portfolio content</p>
+          {loginError && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '1rem' }}>{loginError}</p>}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>Username</label>
             <input
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 8,
+                background: c.inputBg, border: `1px solid ${c.border}`,
+                color: c.white, fontSize: '0.9rem', outline: 'none',
+              }}
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">Password</label>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>Password</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 8,
+                background: c.inputBg, border: `1px solid ${c.border}`,
+                color: c.white, fontSize: '0.9rem', outline: 'none',
+              }}
             />
           </div>
-          <button onClick={handleLogin} className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors">
+          <button onClick={handleLogin} style={{
+            width: '100%', padding: '10px 0', background: c.gold, color: c.navy,
+            borderRadius: 8, fontWeight: 600, fontSize: '0.9rem', border: 'none', cursor: 'pointer',
+          }}>
             Sign In
           </button>
         </div>
@@ -126,50 +262,77 @@ export default function DashboardPage() {
     );
   }
 
+  const navItems = [
+    { id: 'profile', label: 'Profile', icon: '👤' },
+    { id: 'projects', label: 'Projects', icon: '📁' },
+    { id: 'experiences', label: 'Experience', icon: '💼' },
+    { id: 'campaigns', label: 'Campaigns', icon: '⭐' },
+    { id: 'skills', label: 'Skills', icon: '📊' },
+    { id: 'education', label: 'Education', icon: '🎓' },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div style={{ minHeight: '100vh', background: c.navy, display: 'flex' }}>
       {/* Sidebar */}
-      <div className="w-64 bg-[#111111] border-r border-[#2a2a2a] p-6 flex flex-col fixed top-0 left-0 bottom-0 overflow-y-auto">
-        <div className="text-xl font-bold mb-2 px-2">M.A <span className="text-emerald-500">Dashboard</span></div>
-        <div className="text-xs text-gray-600 mb-8 px-2">Portfolio Admin Panel</div>
-        <div className="space-y-1">
-          {[
-            { id: 'profile', label: 'Profile', icon: '👤' },
-            { id: 'projects', label: 'Projects', icon: '📁' },
-            { id: 'experiences', label: 'Experience', icon: '💼' },
-            { id: 'campaigns', label: 'Campaigns', icon: '⭐' },
-            { id: 'skills', label: 'Skills', icon: '📊' },
-            { id: 'education', label: 'Education', icon: '🎓' },
-          ].map(item => (
+      <div style={{
+        width: 256, background: c.navyLight, borderRight: `1px solid ${c.border}`,
+        padding: '1.5rem', display: 'flex', flexDirection: 'column',
+        position: 'fixed', top: 0, left: 0, bottom: 0, overflowY: 'auto',
+      }}>
+        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.2rem', fontWeight: 800, color: c.white, marginBottom: 4, padding: '0 0.5rem' }}>
+          MM<span style={{ color: c.gold }}>.</span> Dashboard
+        </div>
+        <div style={{ fontSize: '0.72rem', color: c.gray600, marginBottom: '2rem', padding: '0 0.5rem' }}>Portfolio Admin Panel</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {navItems.map(item => (
             <button
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
-              className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-2.5 transition-colors ${
-                currentPage === item.id ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
-              }`}
+              style={{
+                width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 8,
+                fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10,
+                transition: 'all 0.2s', border: 'none', cursor: 'pointer',
+                background: currentPage === item.id ? c.gold : 'transparent',
+                color: currentPage === item.id ? c.navy : c.gray400,
+                fontWeight: currentPage === item.id ? 600 : 400,
+              }}
             >
               <span>{item.icon}</span> {item.label}
             </button>
           ))}
         </div>
-        <div className="mt-auto pt-4 border-t border-[#2a2a2a] space-y-1">
-          <a href="/" target="_blank" className="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-2.5 text-gray-400 hover:bg-[#1a1a1a] hover:text-white transition-colors no-underline">
+        <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: `1px solid ${c.border}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <a href="/" target="_blank" style={{
+            width: '100%', padding: '10px 12px', borderRadius: 8,
+            fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10,
+            color: c.gray400, textDecoration: 'none', transition: 'all 0.2s',
+          }}>
             🔗 View Portfolio
           </a>
-          <button onClick={handleLogout} className="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-2.5 text-red-500 hover:bg-red-500/10 transition-colors">
+          <button onClick={handleLogout} style={{
+            width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 8,
+            fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10,
+            color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer',
+          }}>
             🚪 Sign Out
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="ml-64 flex-1 p-8">
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 mb-6 flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-sm text-gray-400">Connected to Portfolio API — Changes appear instantly on the live site</span>
+      <div style={{ marginLeft: 256, flex: 1, padding: '2rem' }}>
+        <div style={{
+          background: c.navyLight, border: `1px solid ${c.border}`,
+          borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem',
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.gold, animation: 'pulse 2s infinite' }} />
+          <span style={{ fontSize: '0.82rem', color: c.gray400 }}>Connected to Portfolio API — Changes appear instantly on the live site</span>
         </div>
         <ContentArea page={currentPage} />
       </div>
+
+      <style>{`@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }`}</style>
     </div>
   );
 }
@@ -181,9 +344,9 @@ export default function DashboardPage() {
 function ContentArea({ page }: { page: string }) {
   switch (page) {
     case 'profile': return <ProfileEditor />;
-    case 'projects': return <ItemList entity="projects" title="Projects" subtitle="Manage your portfolio projects" titleKey="title" subtitleKey="category" descKey="description" tagsKey="tags" />;
+    case 'projects': return <ItemList entity="projects" title="Projects" subtitle="Manage your portfolio projects" titleKey="title" subtitleKey="category" descKey="description" tagsKey="tags" hasImage />;
     case 'experiences': return <ItemList entity="experiences" title="Experience" subtitle="Manage your work experience" titleKey="role" subtitleKey="company" descKey="description" tagsKey="highlights" />;
-    case 'campaigns': return <ItemList entity="campaigns" title="Campaigns" subtitle="Manage your campaign concepts" titleKey="title" subtitleKey="subtitle" descKey="description" tagsKey="tags" />;
+    case 'campaigns': return <ItemList entity="campaigns" title="Campaigns" subtitle="Manage your campaign concepts" titleKey="title" subtitleKey="subtitle" descKey="description" tagsKey="tags" hasImage />;
     case 'skills': return <ItemList entity="skills" title="Skills" subtitle="Manage your skill categories" titleKey="name" tagsKey="skills" />;
     case 'education': return <ItemList entity="education" title="Education" subtitle="Manage your education entries" titleKey="degree" subtitleKey="institution" descKey="details" />;
     default: return null;
@@ -202,7 +365,7 @@ function ProfileEditor() {
     api('/api/profile').then(setProfile);
   }, []);
 
-  if (!profile) return <div className="text-center text-gray-500 py-12">Loading...</div>;
+  if (!profile) return <div style={{ textAlign: 'center', color: c.gray400, padding: '3rem' }}>Loading...</div>;
 
   const fields: { key: keyof ProfileData; label: string; type?: string }[] = [
     { key: 'name', label: 'Full Name' },
@@ -240,30 +403,43 @@ function ProfileEditor() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">Profile Settings</h2>
-        <p className="text-gray-400 text-sm mt-1">Update your personal information and hero section</p>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: c.white }}>Profile Settings</h2>
+        <p style={{ color: c.gray400, fontSize: '0.85rem', marginTop: 4 }}>Update your personal information and hero section</p>
       </div>
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
+      <div style={{ background: c.navyLight, border: `1px solid ${c.border}`, borderRadius: 16, padding: '1.5rem' }}>
         {fields.map(f => (
-          <div key={f.key} className="mb-4">
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">{f.label}</label>
+          <div key={f.key} style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>{f.label}</label>
             {f.type === 'textarea' ? (
               <textarea
                 value={profile[f.key] || ''}
                 onChange={e => setProfile({ ...profile, [f.key]: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500 min-h-[80px] resize-y"
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 8,
+                  background: c.inputBg, border: `1px solid ${c.border}`,
+                  color: c.white, fontSize: '0.85rem', outline: 'none',
+                  minHeight: 80, resize: 'vertical',
+                }}
               />
             ) : (
               <input
                 value={profile[f.key] || ''}
                 onChange={e => setProfile({ ...profile, [f.key]: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 8,
+                  background: c.inputBg, border: `1px solid ${c.border}`,
+                  color: c.white, fontSize: '0.85rem', outline: 'none',
+                }}
               />
             )}
           </div>
         ))}
-        <button onClick={handleSave} disabled={saving} className="mt-4 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors">
+        <button onClick={handleSave} disabled={saving} style={{
+          marginTop: '1rem', padding: '10px 24px', background: c.gold, color: c.navy,
+          borderRadius: 8, fontWeight: 600, fontSize: '0.9rem', border: 'none', cursor: 'pointer',
+          opacity: saving ? 0.5 : 1,
+        }}>
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
@@ -275,7 +451,7 @@ function ProfileEditor() {
 /*  Item List                                                          */
 /* ------------------------------------------------------------------ */
 
-function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tagsKey }: {
+function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tagsKey, hasImage }: {
   entity: string;
   title: string;
   subtitle: string;
@@ -283,20 +459,13 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
   subtitleKey?: string;
   descKey?: string;
   tagsKey?: string;
+  hasImage?: boolean;
 }) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
-
-  const fetchItems = () => {
-    setLoading(true);
-    api(`/api/dashboard/${entity}`)
-      .then(setItems)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -311,6 +480,12 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
     load();
     return () => { cancelled = true; };
   }, [entity]);
+
+  const fetchItems = () => {
+    api(`/api/dashboard/${entity}`)
+      .then(setItems)
+      .catch(() => {});
+  };
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
@@ -353,10 +528,11 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
   const entityFields: Record<string, { key: string; label: string; type: string; options?: string[] }[]> = {
     projects: [
       { key: 'title', label: 'Title', type: 'text' },
-      { key: 'category', label: 'Category', type: 'select', options: ['Brand Audit', 'Campaign', 'Digital', 'Research'] },
-      { key: 'imageUrl', label: 'Image URL', type: 'text' },
+      { key: 'category', label: 'Category', type: 'select', options: ['Brand Audit', 'Campaign', 'Campaign Concept', 'Case Study', 'Digital', 'Research'] },
+      { key: 'imageUrl', label: 'Project Image', type: 'image' },
       { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'tags', label: 'Tags (comma-separated)', type: 'text' },
+      { key: 'featured', label: 'Featured (true/false)', type: 'text' },
       { key: 'order', label: 'Order', type: 'number' },
     ],
     experiences: [
@@ -370,8 +546,9 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
     campaigns: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'subtitle', label: 'Subtitle', type: 'text' },
-      { key: 'imageUrl', label: 'Image URL', type: 'text' },
+      { key: 'imageUrl', label: 'Campaign Image', type: 'image' },
       { key: 'description', label: 'Description', type: 'textarea' },
+      { key: 'projectId', label: 'Project ID', type: 'text' },
       { key: 'tags', label: 'Tags (comma-separated)', type: 'text' },
       { key: 'details', label: 'Details (JSON)', type: 'textarea' },
       { key: 'order', label: 'Order', type: 'number' },
@@ -392,43 +569,83 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
 
   const fields = entityFields[entity] || [];
 
+  const inputStyle = {
+    width: '100%', padding: '10px 14px', borderRadius: 8,
+    background: c.inputBg, border: `1px solid ${c.border}`,
+    color: c.white, fontSize: '0.85rem', outline: 'none',
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 className="text-2xl font-bold">{title}</h2>
-          <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.75rem', fontWeight: 700, color: c.white }}>{title}</h2>
+          <p style={{ color: c.gray400, fontSize: '0.85rem', marginTop: 4 }}>{subtitle}</p>
         </div>
-        <button onClick={openAdd} className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors text-sm">
+        <button onClick={openAdd} style={{
+          padding: '10px 20px', background: c.gold, color: c.navy,
+          borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', border: 'none', cursor: 'pointer',
+        }}>
           + Add New
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center text-gray-500 py-12">Loading...</div>
+        <div style={{ textAlign: 'center', color: c.gray400, padding: '3rem' }}>Loading...</div>
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">No items yet. Add your first one!</div>
+        <div style={{ textAlign: 'center', color: c.gray400, padding: '3rem' }}>No items yet. Add your first one!</div>
       ) : (
         items.map(item => (
-          <div key={item.id} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 mb-4 hover:border-[#333] transition-colors">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <div className="text-base font-semibold">{item[titleKey] || 'Untitled'}</div>
-                {subtitleKey && item[subtitleKey] && <div className="text-gray-500 text-sm mt-1">{item[subtitleKey]}</div>}
-                <div className="text-gray-600 text-xs mt-1">Order: {item.order || 0}</div>
+          <div key={item.id} style={{
+            background: c.navyLight, border: `1px solid ${c.border}`,
+            borderRadius: 12, padding: '1.25rem', marginBottom: '0.75rem',
+            transition: 'border-color 0.2s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = c.borderHover}
+            onMouseLeave={e => e.currentTarget.style.borderColor = c.border}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {hasImage && item.imageUrl && (
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
+                    border: `1px solid ${c.border}`,
+                  }}>
+                    <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: c.white }}>{item[titleKey] || 'Untitled'}</div>
+                  {subtitleKey && item[subtitleKey] && <div style={{ color: c.gray400, fontSize: '0.82rem', marginTop: 2 }}>{item[subtitleKey]}</div>}
+                  <div style={{ color: c.gray600, fontSize: '0.72rem', marginTop: 2 }}>Order: {item.order || 0}</div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(item)} className="px-3 py-1.5 text-xs bg-[#222222] border border-[#2a2a2a] rounded-lg text-white hover:border-emerald-500 transition-colors">Edit</button>
-                <button onClick={() => handleDelete(item.id, item[titleKey])} className="px-3 py-1.5 text-xs border border-red-500/50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">Delete</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => openEdit(item)} style={{
+                  padding: '6px 12px', fontSize: '0.75rem', background: c.inputBg,
+                  border: `1px solid ${c.border}`, borderRadius: 6, color: c.white, cursor: 'pointer',
+                }}>
+                  Edit
+                </button>
+                <button onClick={() => handleDelete(item.id, item[titleKey])} style={{
+                  padding: '6px 12px', fontSize: '0.75rem',
+                  border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6,
+                  color: '#ef4444', background: 'transparent', cursor: 'pointer',
+                }}>
+                  Delete
+                </button>
               </div>
             </div>
             {descKey && item[descKey] && (
-              <p className="text-gray-400 text-sm line-clamp-3">{item[descKey]}</p>
+              <p style={{ color: c.gray400, fontSize: '0.82rem', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item[descKey]}</p>
             )}
             {tagsKey && item[tagsKey] && (
-              <div className="flex gap-2 flex-wrap mt-3">
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                 {String(item[tagsKey]).split(',').map((t: string, i: number) => (
-                  <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 rounded-md text-xs font-medium">{t.trim()}</span>
+                  <span key={i} style={{
+                    padding: '3px 8px', background: 'rgba(200,150,62,0.1)', color: c.gold,
+                    borderRadius: 6, fontSize: '0.7rem', fontWeight: 500,
+                  }}>{t.trim()}</span>
                 ))}
               </div>
             )}
@@ -438,24 +655,39 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => { setShowForm(false); setEditItem(null); }}>
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-semibold mb-6">{editItem ? 'Edit Item' : 'Add New Item'}</h3>
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.8)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+        }} onClick={() => { setShowForm(false); setEditItem(null); }}>
+          <div style={{
+            background: c.navyLight, border: `1px solid ${c.border}`,
+            borderRadius: 20, padding: '2rem', width: '100%', maxWidth: 520,
+            maxHeight: '90vh', overflowY: 'auto',
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: 600, color: c.white, marginBottom: '1.5rem' }}>
+              {editItem ? 'Edit Item' : 'Add New Item'}
+            </h3>
             {fields.map(f => (
-              <div key={f.key} className="mb-4">
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">{f.label}</label>
+              <div key={f.key} style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>{f.label}</label>
                 {f.type === 'textarea' ? (
                   <textarea
                     value={formData[f.key] || ''}
                     onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500 min-h-[80px] resize-y"
+                    style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
+                  />
+                ) : f.type === 'image' ? (
+                  <ImageUpload
+                    value={formData[f.key] || ''}
+                    onChange={url => setFormData({ ...formData, [f.key]: url })}
                   />
                 ) : f.type === 'select' ? (
                   <select
                     value={formData[f.key] || ''}
                     onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+                    style={inputStyle}
                   >
+                    <option value="">Select...</option>
                     {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 ) : f.type === 'number' ? (
@@ -463,20 +695,30 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
                     type="number"
                     value={formData[f.key] || 0}
                     onChange={e => setFormData({ ...formData, [f.key]: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+                    style={inputStyle}
                   />
                 ) : (
                   <input
                     value={formData[f.key] || ''}
                     onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+                    style={inputStyle}
                   />
                 )}
               </div>
             ))}
-            <div className="flex gap-3 justify-end mt-6">
-              <button onClick={() => { setShowForm(false); setEditItem(null); }} className="px-5 py-2.5 bg-[#222222] border border-[#2a2a2a] rounded-lg text-white text-sm transition-colors">Cancel</button>
-              <button onClick={handleSave} className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">Save</button>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+              <button onClick={() => { setShowForm(false); setEditItem(null); }} style={{
+                padding: '10px 20px', background: c.inputBg, border: `1px solid ${c.border}`,
+                borderRadius: 8, color: c.white, fontSize: '0.85rem', cursor: 'pointer',
+              }}>
+                Cancel
+              </button>
+              <button onClick={handleSave} style={{
+                padding: '10px 20px', background: c.gold, color: c.navy,
+                borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', border: 'none', cursor: 'pointer',
+              }}>
+                Save
+              </button>
             </div>
           </div>
         </div>

@@ -12,3 +12,8 @@ skills/
 mini-services/
 examples/
 worklog.md
+upload/*.zip
+upload/extracted/
+.zscripts/
+portfolio_content.json
+db/
