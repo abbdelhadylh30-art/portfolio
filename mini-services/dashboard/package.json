@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node index.mjs"
+    "dev": "bun --hot index.ts"
   },
   "dependencies": {}
 }

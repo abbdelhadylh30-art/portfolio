@@ -1,24 +1,7 @@
-import { createServer } from 'http';
+import { NextResponse } from "next/server";
 
-const PORT = 3001;
-
-console.log(`🚀 Dashboard Admin Panel starting on port ${PORT}...`);
-
-const server = createServer((req, res) => {
-  // Serve dashboard HTML for all non-API requests
-  // API calls from the dashboard go through Caddy to the Next.js backend on port 3000
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(DASHBOARD_HTML);
-});
-
-server.listen(PORT, () => {
-  console.log(`🚀 Dashboard Admin Panel running on http://localhost:${PORT}`);
-});
-
-// ──────────────────────────────────────────
-// DASHBOARD HTML SPA
-// ──────────────────────────────────────────
-const DASHBOARD_HTML = `<!DOCTYPE html>
+export async function GET() {
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -252,10 +235,6 @@ const DASHBOARD_HTML = `<!DOCTYPE html>
 var authToken = localStorage.getItem('dashboard_token') || '';
 var currentPage = 'profile';
 
-// All API calls go through Caddy to the Next.js backend on port 3000
-// The dashboard page is served from port 3001 but API calls use relative paths
-// that Caddy routes to the Next.js backend
-
 function handleLogin() {
   var username = document.getElementById('loginUsername').value;
   var password = document.getElementById('loginPassword').value;
@@ -484,3 +463,10 @@ if(authToken) {
 </script>
 </body>
 </html>`;
+
+  return new NextResponse(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
+  });
+}
