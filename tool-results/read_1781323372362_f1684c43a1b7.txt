@@ -1,0 +1,1125 @@
+     1→'use client';
+     2→
+     3→import React, { useEffect, useState, useCallback } from 'react';
+     4→import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+     5→import {
+     6→  Mail,
+     7→  Phone,
+     8→  Linkedin,
+     9→  ChevronUp,
+    10→  ExternalLink,
+    11→  Search,
+    12→  Lightbulb,
+    13→  Users,
+    14→  Target,
+    15→  ArrowRight,
+    16→  Briefcase,
+    17→  GraduationCap,
+    18→  Menu,
+    19→  X,
+    20→} from 'lucide-react';
+    21→import { Button } from '@/components/ui/button';
+    22→import { Badge } from '@/components/ui/badge';
+    23→import { Card, CardContent } from '@/components/ui/card';
+    24→import { Separator } from '@/components/ui/separator';
+    25→import { Skeleton } from '@/components/ui/skeleton';
+    26→
+    27→/* ------------------------------------------------------------------ */
+    28→/*  Types                                                              */
+    29→/* ------------------------------------------------------------------ */
+    30→
+    31→interface ProfileData {
+    32→  id: string;
+    33→  name: string;
+    34→  title: string;
+    35→  email: string;
+    36→  phone: string;
+    37→  linkedin: string;
+    38→  bio: string;
+    39→  heroSubtitle: string;
+    40→  quote: string;
+    41→  stat1Value: string;
+    42→  stat1Label: string;
+    43→  stat1Sub: string;
+    44→  stat2Value: string;
+    45→  stat2Label: string;
+    46→  stat2Sub: string;
+    47→  stat3Value: string;
+    48→  stat3Label: string;
+    49→  stat3Sub: string;
+    50→  stat4Value: string;
+    51→  stat4Label: string;
+    52→  stat4Sub: string;
+    53→}
+    54→
+    55→interface ProjectData {
+    56→  id: string;
+    57→  category: string;
+    58→  title: string;
+    59→  description: string;
+    60→  tags: string;
+    61→  order: number;
+    62→}
+    63→
+    64→interface ExperienceData {
+    65→  id: string;
+    66→  role: string;
+    67→  company: string;
+    68→  period: string;
+    69→  description: string;
+    70→  highlights: string;
+    71→  order: number;
+    72→}
+    73→
+    74→interface CampaignData {
+    75→  id: string;
+    76→  title: string;
+    77→  subtitle: string;
+    78→  description: string;
+    79→  tags: string;
+    80→  details: string;
+    81→  order: number;
+    82→}
+    83→
+    84→interface SkillCategoryData {
+    85→  id: string;
+    86→  name: string;
+    87→  skills: string;
+    88→  order: number;
+    89→}
+    90→
+    91→interface EducationData {
+    92→  id: string;
+    93→  degree: string;
+    94→  institution: string;
+    95→  year: string;
+    96→  details: string;
+    97→  order: number;
+    98→}
+    99→
+   100→/* ------------------------------------------------------------------ */
+   101→/*  Animation Variants                                                 */
+   102→/* ------------------------------------------------------------------ */
+   103→
+   104→const fadeInUp = {
+   105→  hidden: { opacity: 0, y: 30 },
+   106→  visible: (i: number = 0) => ({
+   107→    opacity: 1,
+   108→    y: 0,
+   109→    transition: { duration: 0.6, delay: i * 0.1, ease: [0.25, 0.4, 0.25, 1] },
+   110→  }),
+   111→};
+   112→
+   113→const fadeIn = {
+   114→  hidden: { opacity: 0 },
+   115→  visible: { opacity: 1, transition: { duration: 0.5 } },
+   116→};
+   117→
+   118→const staggerContainer = {
+   119→  hidden: { opacity: 0 },
+   120→  visible: {
+   121→    opacity: 1,
+   122→    transition: { staggerChildren: 0.1 },
+   123→  },
+   124→};
+   125→
+   126→const staggerItem = {
+   127→  hidden: { opacity: 0, y: 20 },
+   128→  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+   129→};
+   130→
+   131→/* ------------------------------------------------------------------ */
+   132→/*  Gradient backgrounds for project cards                             */
+   133→/* ------------------------------------------------------------------ */
+   134→
+   135→const cardGradients = [
+   136→  'from-emerald-900/40 via-teal-900/30 to-cyan-900/20',
+   137→  'from-teal-900/40 via-emerald-900/30 to-green-900/20',
+   138→  'from-green-900/40 via-emerald-900/30 to-teal-900/20',
+   139→  'from-cyan-900/40 via-teal-900/30 to-emerald-900/20',
+   140→];
+   141→
+   142→/* ------------------------------------------------------------------ */
+   143→/*  Loading Skeleton Component                                         */
+   144→/* ------------------------------------------------------------------ */
+   145→
+   146→function LoadingSkeleton() {
+   147→  return (
+   148→    <div className="min-h-screen bg-[#0a0a0a] p-6 md:p-12">
+   149→      <div className="max-w-6xl mx-auto space-y-8">
+   150→        <Skeleton className="h-16 w-3/4 bg-white/5" />
+   151→        <Skeleton className="h-8 w-1/2 bg-white/5" />
+   152→        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+   153→          {[...Array(4)].map((_, i) => (
+   154→            <Skeleton key={i} className="h-28 bg-white/5 rounded-xl" />
+   155→          ))}
+   156→        </div>
+   157→        <div className="space-y-6 mt-12">
+   158→          {[...Array(6)].map((_, i) => (
+   159→            <Skeleton key={i} className="h-40 bg-white/5 rounded-xl" />
+   160→          ))}
+   161→        </div>
+   162→      </div>
+   163→    </div>
+   164→  );
+   165→}
+   166→
+   167→/* ------------------------------------------------------------------ */
+   168→/*  Main Page Component                                                */
+   169→/* ------------------------------------------------------------------ */
+   170→
+   171→export default function Home() {
+   172→  const [profile, setProfile] = useState<ProfileData | null>(null);
+   173→  const [projects, setProjects] = useState<ProjectData[]>([]);
+   174→  const [experiences, setExperiences] = useState<ExperienceData[]>([]);
+   175→  const [campaigns, setCampaings] = useState<CampaignData[]>([]);
+   176→  const [skillCategories, setSkillCategories] = useState<SkillCategoryData[]>([]);
+   177→  const [education, setEducation] = useState<EducationData[]>([]);
+   178→  const [loading, setLoading] = useState(true);
+   179→  const [activeFilter, setActiveFilter] = useState('All');
+   180→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   181→  const [scrolled, setScrolled] = useState(false);
+   182→
+   183→  const { scrollYProgress } = useScroll();
+   184→  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+   185→
+   186→  /* ---- Data fetching ---- */
+   187→  useEffect(() => {
+   188→    async function fetchData() {
+   189→      try {
+   190→        const [profileRes, projectsRes, expRes, campRes, skillsRes, eduRes] = await Promise.all([
+   191→          fetch('/api/profile'),
+   192→          fetch('/api/projects'),
+   193→          fetch('/api/experiences'),
+   194→          fetch('/api/campaigns'),
+   195→          fetch('/api/skills'),
+   196→          fetch('/api/education'),
+   197→        ]);
+   198→
+   199→        const [profileData, projectsData, expData, campData, skillsData, eduData] = await Promise.all([
+   200→          profileRes.json(),
+   201→          projectsRes.json(),
+   202→          expRes.json(),
+   203→          campRes.json(),
+   204→          skillsRes.json(),
+   205→          eduRes.json(),
+   206→        ]);
+   207→
+   208→        setProfile(profileData);
+   209→        setProjects(projectsData);
+   210→        setExperiences(expData);
+   211→        setCampaings(campData);
+   212→        setSkillCategories(skillsData);
+   213→        setEducation(eduData);
+   214→      } catch (error) {
+   215→        console.error('Failed to fetch data:', error);
+   216→      } finally {
+   217→        setLoading(false);
+   218→      }
+   219→    }
+   220→    fetchData();
+   221→  }, []);
+   222→
+   223→  /* ---- Scroll detection for nav ---- */
+   224→  useEffect(() => {
+   225→    const handleScroll = () => {
+   226→      setScrolled(window.scrollY > 50);
+   227→    };
+   228→    window.addEventListener('scroll', handleScroll, { passive: true });
+   229→    return () => window.removeEventListener('scroll', handleScroll);
+   230→  }, []);
+   231→
+   232→  /* ---- Smooth scroll ---- */
+   233→  const scrollTo = useCallback((id: string) => {
+   234→    const el = document.getElementById(id);
+   235→    if (el) {
+   236→      el.scrollIntoView({ behavior: 'smooth' });
+   237→    }
+   238→    setMobileMenuOpen(false);
+   239→  }, []);
+   240→
+   241→  /* ---- Project filter ---- */
+   242→  const categories = ['All', ...Array.from(new Set(projects.map((p) => p.category)))];
+   243→  const filteredProjects = activeFilter === 'All' ? projects : projects.filter((p) => p.category === activeFilter);
+   244→
+   245→  /* ---- Loading state ---- */
+   246→  if (loading) return <LoadingSkeleton />;
+   247→
+   248→  const navLinks = [
+   249→    { id: 'about', label: 'About' },
+   250→    { id: 'experience', label: 'Experience' },
+   251→    { id: 'work', label: 'Work' },
+   252→    { id: 'campaigns', label: 'Campaigns' },
+   253→    { id: 'skills', label: 'Skills' },
+   254→    { id: 'education', label: 'Education' },
+   255→    { id: 'contact', label: 'Contact' },
+   256→  ];
+   257→
+   258→  const featureCards = [
+   259→    {
+   260→      icon: <Search className="w-6 h-6 text-emerald-400" />,
+   261→      title: 'Research-First',
+   262→      desc: 'Every strategy starts with data, competitive analysis, and deep audience understanding.',
+   263→    },
+   264→    {
+   265→      icon: <Lightbulb className="w-6 h-6 text-emerald-400" />,
+   266→      title: 'Creative Problem Solving',
+   267→      desc: 'Turning insights into innovative campaigns that resonate and deliver measurable results.',
+   268→    },
+   269→    {
+   270→      icon: <Users className="w-6 h-6 text-emerald-400" />,
+   271→      title: 'Cross-Functional Leadership',
+   272→      desc: 'Bridging sales, marketing, and operations to align teams around shared objectives.',
+   273→    },
+   274→    {
+   275→      icon: <Target className="w-6 h-6 text-emerald-400" />,
+   276→      title: 'Results-Driven',
+   277→      desc: 'Focused on measurable outcomes — from footfall to engagement rate to revenue impact.',
+   278→    },
+   279→  ];
+   280→
+   281→  return (
+   282→    <div className="min-h-screen flex flex-col bg-[#0a0a0a] text-white">
+   283→      {/* ================================================================ */}
+   284→      {/*  NAVIGATION                                                      */}
+   285→      {/* ================================================================ */}
+   286→      <nav
+   287→        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+   288→          scrolled ? 'bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20' : 'bg-transparent'
+   289→        }`}
+   290→      >
+   291→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   292→          <div className="flex items-center justify-between h-16">
+   293→            {/* Logo */}
+   294→            <button
+   295→              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+   296→              className="text-xl font-bold tracking-tight cursor-pointer"
+   297→            >
+   298→              <span className="text-white">M</span>
+   299→              <span className="text-emerald-500">.</span>
+   300→              <span className="text-white">A</span>
+   301→            </button>
+   302→
+   303→            {/* Desktop Links */}
+   304→            <div className="hidden md:flex items-center gap-1">
+   305→              {navLinks.map((link) => (
+   306→                <button
+   307→                  key={link.id}
+   308→                  onClick={() => scrollTo(link.id)}
+   309→                  className="px-3 py-2 text-sm text-gray-400 hover:text-emerald-400 transition-colors rounded-md hover:bg-white/5 cursor-pointer"
+   310→                >
+   311→                  {link.label}
+   312→                </button>
+   313→              ))}
+   314→            </div>
+   315→
+   316→            {/* Mobile menu toggle */}
+   317→            <button
+   318→              className="md:hidden p-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+   319→              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+   320→              aria-label="Toggle menu"
+   321→            >
+   322→              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+   323→            </button>
+   324→          </div>
+   325→        </div>
+   326→
+   327→        {/* Mobile menu */}
+   328→        <AnimatePresence>
+   329→          {mobileMenuOpen && (
+   330→            <motion.div
+   331→              initial={{ opacity: 0, height: 0 }}
+   332→              animate={{ opacity: 1, height: 'auto' }}
+   333→              exit={{ opacity: 0, height: 0 }}
+   334→              className="md:hidden bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 overflow-hidden"
+   335→            >
+   336→              <div className="px-4 py-4 space-y-1">
+   337→                {navLinks.map((link) => (
+   338→                  <button
+   339→                    key={link.id}
+   340→                    onClick={() => scrollTo(link.id)}
+   341→                    className="block w-full text-left px-3 py-2.5 text-sm text-gray-400 hover:text-emerald-400 transition-colors rounded-md hover:bg-white/5 cursor-pointer"
+   342→                  >
+   343→                    {link.label}
+   344→                  </button>
+   345→                ))}
+   346→              </div>
+   347→            </motion.div>
+   348→          )}
+   349→        </AnimatePresence>
+   350→      </nav>
+   351→
+   352→      {/* ================================================================ */}
+   353→      {/*  MAIN CONTENT                                                    */}
+   354→      {/* ================================================================ */}
+   355→      <main className="flex-1">
+   356→        {/* ============================================================== */}
+   357→        {/*  HERO SECTION                                                   */}
+   358→        {/* ============================================================== */}
+   359→        <motion.section style={{ opacity: heroOpacity }} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+   360→          {/* Background pattern */}
+   361→          <div className="absolute inset-0 bg-[#0a0a0a]">
+   362→            <div className="absolute inset-0 opacity-[0.03]" style={{
+   363→              backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)`,
+   364→              backgroundSize: '40px 40px',
+   365→            }} />
+   366→            <div className="absolute top-1/4 -left-32 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+   367→            <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
+   368→          </div>
+   369→
+   370→          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+   371→            {/* Main heading */}
+   372→            <motion.h1
+   373→              variants={fadeInUp}
+   374→              initial="hidden"
+   375→              animate="visible"
+   376→              custom={0}
+   377→              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6"
+   378→            >
+   379→              Mohamed
+   380→              <span className="text-emerald-500">Medhat</span>
+   381→              Ahmed
+   382→              <span className="text-emerald-500">.</span>
+   383→            </motion.h1>
+   384→
+   385→            {/* Subtitle */}
+   386→            <motion.p
+   387→              variants={fadeInUp}
+   388→              initial="hidden"
+   389→              animate="visible"
+   390→              custom={1}
+   391→              className="text-lg sm:text-xl md:text-2xl text-gray-400 mb-10 max-w-2xl mx-auto"
+   392→            >
+   393→              {profile?.heroSubtitle || 'Marketing & Business Development'}
+   394→            </motion.p>
+   395→
+   396→            {/* CTA Buttons */}
+   397→            <motion.div
+   398→              variants={fadeInUp}
+   399→              initial="hidden"
+   400→              animate="visible"
+   401→              custom={2}
+   402→              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+   403→            >
+   404→              <Button
+   405→                onClick={() => scrollTo('work')}
+   406→                size="lg"
+   407→                className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-8 py-6 text-base rounded-xl cursor-pointer"
+   408→              >
+   409→                View My Work
+   410→                <ArrowRight className="w-4 h-4 ml-2" />
+   411→              </Button>
+   412→              <Button
+   413→                onClick={() => scrollTo('contact')}
+   414→                variant="outline"
+   415→                size="lg"
+   416→                className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 px-8 py-6 text-base rounded-xl cursor-pointer"
+   417→              >
+   418→                Get In Touch
+   419→              </Button>
+   420→            </motion.div>
+   421→
+   422→            {/* Stats */}
+   423→            <motion.div
+   424→              variants={staggerContainer}
+   425→              initial="hidden"
+   426→              animate="visible"
+   427→              className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto mb-16"
+   428→            >
+   429→              {profile &&
+   430→                [
+   431→                  { value: profile.stat1Value, label: profile.stat1Label, sub: profile.stat1Sub },
+   432→                  { value: profile.stat2Value, label: profile.stat2Label, sub: profile.stat2Sub },
+   433→                  { value: profile.stat3Value, label: profile.stat3Label, sub: profile.stat3Sub },
+   434→                  { value: profile.stat4Value, label: profile.stat4Label, sub: profile.stat4Sub },
+   435→                ].map((stat, i) => (
+   436→                  <motion.div key={i} variants={staggerItem}>
+   437→                    <Card className="bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl">
+   438→                      <CardContent className="p-4 sm:p-5 text-center">
+   439→                        <div className="text-2xl sm:text-3xl font-bold text-emerald-400 mb-1">{stat.value}</div>
+   440→                        <div className="text-sm font-medium text-gray-300">{stat.label}</div>
+   441→                        <div className="text-xs text-gray-500 mt-0.5">{stat.sub}</div>
+   442→                      </CardContent>
+   443→                    </Card>
+   444→                  </motion.div>
+   445→                ))}
+   446→            </motion.div>
+   447→
+   448→            {/* Quote */}
+   449→            <motion.div
+   450→              variants={fadeInUp}
+   451→              initial="hidden"
+   452→              animate="visible"
+   453→              custom={5}
+   454→              className="max-w-2xl mx-auto"
+   455→            >
+   456→              <Separator className="bg-white/5 mb-6" />
+   457→              <p className="text-gray-500 italic text-sm sm:text-base">
+   458→                &ldquo;{profile?.quote || 'Understand the problem deeply, then solve it creatively.'}&rdquo;
+   459→              </p>
+   460→              <p className="text-gray-600 text-xs mt-2">— {profile?.name || 'Mohamed Medhat Ahmed'}</p>
+   461→            </motion.div>
+   462→          </div>
+   463→
+   464→          {/* Scroll indicator */}
+   465→          <motion.div
+   466→            animate={{ y: [0, 8, 0] }}
+   467→            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+   468→            className="absolute bottom-8 left-1/2 -translate-x-1/2"
+   469→          >
+   470→            <div className="w-5 h-8 border-2 border-gray-600 rounded-full flex justify-center pt-1">
+   471→              <div className="w-1 h-2 bg-emerald-500 rounded-full" />
+   472→            </div>
+   473→          </motion.div>
+   474→        </motion.section>
+   475→
+   476→        {/* ============================================================== */}
+   477→        {/*  ABOUT SECTION                                                  */}
+   478→        {/* ============================================================== */}
+   479→        <section id="about" className="py-20 sm:py-28 bg-[#0a0a0a]">
+   480→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   481→            <motion.div
+   482→              variants={fadeInUp}
+   483→              initial="hidden"
+   484→              whileInView="visible"
+   485→              viewport={{ once: true, margin: '-100px' }}
+   486→              custom={0}
+   487→            >
+   488→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   489→                About <span className="text-emerald-500">Me</span>
+   490→              </h2>
+   491→              <Separator className="bg-emerald-500/30 w-16 mb-8" />
+   492→            </motion.div>
+   493→
+   494→            <div className="grid lg:grid-cols-5 gap-10 lg:gap-14">
+   495→              {/* Left: Info */}
+   496→              <motion.div
+   497→                variants={fadeInUp}
+   498→                initial="hidden"
+   499→                whileInView="visible"
+   500→                viewport={{ once: true, margin: '-100px' }}
+   501→                custom={1}
+   502→                className="lg:col-span-2 space-y-5"
+   503→              >
+   504→                <h3 className="text-xl sm:text-2xl font-semibold text-white">{profile?.name}</h3>
+   505→                <p className="text-emerald-400 font-medium">{profile?.title}</p>
+   506→
+   507→                <div className="space-y-3 pt-2">
+   508→                  <a
+   509→                    href={`mailto:${profile?.email}`}
+   510→                    className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors group"
+   511→                  >
+   512→                    <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors">
+   513→                      <Mail className="w-4 h-4" />
+   514→                    </div>
+   515→                    <span className="text-sm">{profile?.email}</span>
+   516→                  </a>
+   517→                  <a
+   518→                    href={`tel:${profile?.phone}`}
+   519→                    className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors group"
+   520→                  >
+   521→                    <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors">
+   522→                      <Phone className="w-4 h-4" />
+   523→                    </div>
+   524→                    <span className="text-sm">{profile?.phone}</span>
+   525→                  </a>
+   526→                  <a
+   527→                    href={`https://linkedin.com/in/${profile?.linkedin}`}
+   528→                    target="_blank"
+   529→                    rel="noopener noreferrer"
+   530→                    className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors group"
+   531→                  >
+   532→                    <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors">
+   533→                      <Linkedin className="w-4 h-4" />
+   534→                    </div>
+   535→                    <span className="text-sm">LinkedIn Profile</span>
+   536→                    <ExternalLink className="w-3 h-3" />
+   537→                  </a>
+   538→                </div>
+   539→              </motion.div>
+   540→
+   541→              {/* Right: Bio + Features */}
+   542→              <motion.div
+   543→                variants={fadeInUp}
+   544→                initial="hidden"
+   545→                whileInView="visible"
+   546→                viewport={{ once: true, margin: '-100px' }}
+   547→                custom={2}
+   548→                className="lg:col-span-3 space-y-8"
+   549→              >
+   550→                <div className="space-y-4">
+   551→                  {profile?.bio.split('\n\n').map((paragraph, i) => (
+   552→                    <p key={i} className="text-gray-400 leading-relaxed text-sm sm:text-base">
+   553→                      {paragraph}
+   554→                    </p>
+   555→                  ))}
+   556→                </div>
+   557→
+   558→                {/* Feature cards */}
+   559→                <div className="grid sm:grid-cols-2 gap-3 pt-4">
+   560→                  {featureCards.map((feature, i) => (
+   561→                    <motion.div
+   562→                      key={i}
+   563→                      variants={staggerItem}
+   564→                      initial="hidden"
+   565→                      whileInView="visible"
+   566→                      viewport={{ once: true }}
+   567→                      custom={i}
+   568→                    >
+   569→                      <Card className="bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.05] hover:border-emerald-500/20 transition-all duration-300 h-full rounded-xl">
+   570→                        <CardContent className="p-4 sm:p-5">
+   571→                          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3">
+   572→                            {feature.icon}
+   573→                          </div>
+   574→                          <h4 className="font-semibold text-white text-sm mb-1">{feature.title}</h4>
+   575→                          <p className="text-gray-500 text-xs leading-relaxed">{feature.desc}</p>
+   576→                        </CardContent>
+   577→                      </Card>
+   578→                    </motion.div>
+   579→                  ))}
+   580→                </div>
+   581→              </motion.div>
+   582→            </div>
+   583→          </div>
+   584→        </section>
+   585→
+   586→        {/* ============================================================== */}
+   587→        {/*  EXPERIENCE SECTION                                             */}
+   588→        {/* ============================================================== */}
+   589→        <section id="experience" className="py-20 sm:py-28 bg-[#0d0d0d]">
+   590→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   591→            <motion.div
+   592→              variants={fadeInUp}
+   593→              initial="hidden"
+   594→              whileInView="visible"
+   595→              viewport={{ once: true, margin: '-100px' }}
+   596→              custom={0}
+   597→            >
+   598→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   599→                Work <span className="text-emerald-500">Experience</span>
+   600→              </h2>
+   601→              <Separator className="bg-emerald-500/30 w-16 mb-12" />
+   602→            </motion.div>
+   603→
+   604→            {/* Timeline */}
+   605→            <div className="relative">
+   606→              {/* Vertical line */}
+   607→              <div className="absolute left-4 md:left-8 top-0 bottom-0 w-px bg-gradient-to-b from-emerald-500/40 via-emerald-500/20 to-transparent" />
+   608→
+   609→              <div className="space-y-8 sm:space-y-10">
+   610→                {experiences.map((exp, i) => (
+   611→                  <motion.div
+   612→                    key={exp.id}
+   613→                    variants={fadeInUp}
+   614→                    initial="hidden"
+   615→                    whileInView="visible"
+   616→                    viewport={{ once: true, margin: '-50px' }}
+   617→                    custom={i}
+   618→                    className="relative pl-12 md:pl-20"
+   619→                  >
+   620→                    {/* Timeline dot */}
+   621→                    <div className="absolute left-2.5 md:left-6.5 top-1.5 w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30" />
+   622→                    <div className="absolute left-1.5 md:left-5.5 top-0.5 w-4.5 h-4.5 rounded-full border-2 border-emerald-500/30 bg-[#0d0d0d]" />
+   623→
+   624→                    <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl">
+   625→                      <CardContent className="p-4 sm:p-6">
+   626→                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+   627→                          <div>
+   628→                            <h3 className="text-lg font-semibold text-white">{exp.role}</h3>
+   629→                            <p className="text-emerald-400 text-sm font-medium">{exp.company}</p>
+   630→                          </div>
+   631→                          <Badge
+   632→                            variant="outline"
+   633→                            className="border-emerald-500/20 text-emerald-400 text-xs w-fit shrink-0"
+   634→                          >
+   635→                            {exp.period}
+   636→                          </Badge>
+   637→                        </div>
+   638→                        <p className="text-gray-400 text-sm mb-4 leading-relaxed">{exp.description}</p>
+   639→                        {exp.highlights && (
+   640→                          <div className="flex flex-wrap gap-2">
+   641→                            {exp.highlights.split(',').map((h, hi) => (
+   642→                              <Badge
+   643→                                key={hi}
+   644→                                className="bg-emerald-500/10 text-emerald-300 border-0 text-xs"
+   645→                              >
+   646→                                {h.trim()}
+   647→                              </Badge>
+   648→                            ))}
+   649→                          </div>
+   650→                        )}
+   651→                      </CardContent>
+   652→                    </Card>
+   653→                  </motion.div>
+   654→                ))}
+   655→              </div>
+   656→            </div>
+   657→          </div>
+   658→        </section>
+   659→
+   660→        {/* ============================================================== */}
+   661→        {/*  SELECTED WORK SECTION                                          */}
+   662→        {/* ============================================================== */}
+   663→        <section id="work" className="py-20 sm:py-28 bg-[#0a0a0a]">
+   664→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   665→            <motion.div
+   666→              variants={fadeInUp}
+   667→              initial="hidden"
+   668→              whileInView="visible"
+   669→              viewport={{ once: true, margin: '-100px' }}
+   670→              custom={0}
+   671→            >
+   672→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   673→                Selected <span className="text-emerald-500">Work</span>
+   674→              </h2>
+   675→              <Separator className="bg-emerald-500/30 w-16 mb-8" />
+   676→            </motion.div>
+   677→
+   678→            {/* Filter buttons */}
+   679→            <motion.div
+   680→              variants={fadeInUp}
+   681→              initial="hidden"
+   682→              whileInView="visible"
+   683→              viewport={{ once: true }}
+   684→              custom={1}
+   685→              className="flex flex-wrap gap-2 mb-8"
+   686→            >
+   687→              {categories.map((cat) => (
+   688→                <Button
+   689→                  key={cat}
+   690→                  variant={activeFilter === cat ? 'default' : 'outline'}
+   691→                  size="sm"
+   692→                  onClick={() => setActiveFilter(cat)}
+   693→                  className={
+   694→                    activeFilter === cat
+   695→                      ? 'bg-emerald-500 hover:bg-emerald-600 text-black font-medium rounded-lg cursor-pointer'
+   696→                      : 'border-white/10 text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30 rounded-lg cursor-pointer'
+   697→                  }
+   698→                >
+   699→                  {cat}
+   700→                </Button>
+   701→              ))}
+   702→            </motion.div>
+   703→
+   704→            {/* Project grid */}
+   705→            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+   706→              <AnimatePresence mode="popLayout">
+   707→                {filteredProjects.map((project, i) => (
+   708→                  <motion.div
+   709→                    key={project.id}
+   710→                    layout
+   711→                    variants={fadeInUp}
+   712→                    initial="hidden"
+   713→                    animate="visible"
+   714→                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.3 } }}
+   715→                    custom={i}
+   716→                  >
+   717→                    <Card className="overflow-hidden bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 group rounded-xl h-full">
+   718→                      {/* Gradient header */}
+   719→                      <div
+   720→                        className={`h-32 sm:h-40 bg-gradient-to-br ${cardGradients[i % cardGradients.length]} relative overflow-hidden`}
+   721→                      >
+   722→                        <div className="absolute inset-0 opacity-10" style={{
+   723→                          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+   724→                          backgroundSize: '24px 24px',
+   725→                        }} />
+   726→                        <div className="absolute inset-0 flex items-center justify-center">
+   727→                          <Briefcase className="w-12 h-12 text-emerald-400/20 group-hover:text-emerald-400/40 transition-colors" />
+   728→                        </div>
+   729→                        <div className="absolute top-3 left-3">
+   730→                          <Badge className="bg-emerald-500/20 text-emerald-300 border-0 text-xs backdrop-blur-sm">
+   731→                            {project.category}
+   732→                          </Badge>
+   733→                        </div>
+   734→                      </div>
+   735→
+   736→                      <CardContent className="p-4 sm:p-6">
+   737→                        <h3 className="text-base sm:text-lg font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+   738→                          {project.title}
+   739→                        </h3>
+   740→                        <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3">
+   741→                          {project.description}
+   742→                        </p>
+   743→                        {project.tags && (
+   744→                          <div className="flex flex-wrap gap-1.5">
+   745→                            {project.tags.split(',').map((tag, ti) => (
+   746→                              <Badge
+   747→                                key={ti}
+   748→                                variant="outline"
+   749→                                className="border-white/10 text-gray-500 text-xs"
+   750→                              >
+   751→                                {tag.trim()}
+   752→                              </Badge>
+   753→                            ))}
+   754→                          </div>
+   755→                        )}
+   756→                      </CardContent>
+   757→                    </Card>
+   758→                  </motion.div>
+   759→                ))}
+   760→              </AnimatePresence>
+   761→            </div>
+   762→          </div>
+   763→        </section>
+   764→
+   765→        {/* ============================================================== */}
+   766→        {/*  CAMPAIGN CONCEPTS SECTION                                      */}
+   767→        {/* ============================================================== */}
+   768→        <section id="campaigns" className="py-20 sm:py-28 bg-[#0d0d0d]">
+   769→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   770→            <motion.div
+   771→              variants={fadeInUp}
+   772→              initial="hidden"
+   773→              whileInView="visible"
+   774→              viewport={{ once: true, margin: '-100px' }}
+   775→              custom={0}
+   776→            >
+   777→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   778→                Campaign <span className="text-emerald-500">Concepts</span>
+   779→              </h2>
+   780→              <Separator className="bg-emerald-500/30 w-16 mb-12" />
+   781→            </motion.div>
+   782→
+   783→            <div className="space-y-6">
+   784→              {campaigns.map((campaign, i) => {
+   785→                let details: Record<string, string> = {};
+   786→                try {
+   787→                  details = JSON.parse(campaign.details || '{}');
+   788→                } catch {
+   789→                  // ignore parse errors
+   790→                }
+   791→
+   792→                const tags = campaign.tags ? campaign.tags.split(',').map((t) => t.trim()) : [];
+   793→
+   794→                return (
+   795→                  <motion.div
+   796→                    key={campaign.id}
+   797→                    variants={fadeInUp}
+   798→                    initial="hidden"
+   799→                    whileInView="visible"
+   800→                    viewport={{ once: true, margin: '-50px' }}
+   801→                    custom={i}
+   802→                  >
+   803→                    <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl overflow-hidden">
+   804→                      <CardContent className="p-5 sm:p-8">
+   805→                        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+   806→                          {/* Left: Campaign info */}
+   807→                          <div className="flex-1 space-y-3">
+   808→                            <h3 className="text-lg sm:text-xl font-semibold text-white">{campaign.title}</h3>
+   809→                            <p className="text-emerald-400 text-sm font-medium">{campaign.subtitle}</p>
+   810→                            <p className="text-gray-400 text-sm leading-relaxed">{campaign.description}</p>
+   811→                            {tags.length > 0 && (
+   812→                              <div className="flex flex-wrap gap-1.5 pt-2">
+   813→                                {tags.map((tag, ti) => (
+   814→                                  <Badge
+   815→                                    key={ti}
+   816→                                    className="bg-emerald-500/10 text-emerald-300 border-0 text-xs"
+   817→                                  >
+   818→                                    {tag}
+   819→                                  </Badge>
+   820→                                ))}
+   821→                              </div>
+   822→                            )}
+   823→                          </div>
+   824→
+   825→                          {/* Right: Details table */}
+   826→                          {Object.keys(details).length > 0 && (
+   827→                            <div className="lg:w-72 shrink-0">
+   828→                              <div className="bg-white/[0.03] rounded-lg border border-white/[0.06] overflow-hidden">
+   829→                                <div className="px-4 py-2.5 bg-emerald-500/10 border-b border-white/[0.06]">
+   830→                                  <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+   831→                                    Campaign Details
+   832→                                  </span>
+   833→                                </div>
+   834→                                <div className="divide-y divide-white/[0.04]">
+   835→                                  {Object.entries(details).map(([key, value]) => (
+   836→                                    <div key={key} className="px-4 py-2.5 flex justify-between items-center gap-4">
+   837→                                      <span className="text-xs text-gray-500 capitalize">
+   838→                                        {key.replace(/([A-Z])/g, ' $1').trim()}
+   839→                                      </span>
+   840→                                      <span className="text-xs text-gray-300 font-medium text-right">
+   841→                                        {value}
+   842→                                      </span>
+   843→                                    </div>
+   844→                                  ))}
+   845→                                </div>
+   846→                              </div>
+   847→                            </div>
+   848→                          )}
+   849→                        </div>
+   850→                      </CardContent>
+   851→                    </Card>
+   852→                  </motion.div>
+   853→                );
+   854→              })}
+   855→            </div>
+   856→          </div>
+   857→        </section>
+   858→
+   859→        {/* ============================================================== */}
+   860→        {/*  SKILLS SECTION                                                 */}
+   861→        {/* ============================================================== */}
+   862→        <section id="skills" className="py-20 sm:py-28 bg-[#0a0a0a]">
+   863→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   864→            <motion.div
+   865→              variants={fadeInUp}
+   866→              initial="hidden"
+   867→              whileInView="visible"
+   868→              viewport={{ once: true, margin: '-100px' }}
+   869→              custom={0}
+   870→            >
+   871→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   872→                Skills & <span className="text-emerald-500">Expertise</span>
+   873→              </h2>
+   874→              <Separator className="bg-emerald-500/30 w-16 mb-12" />
+   875→            </motion.div>
+   876→
+   877→            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+   878→              {skillCategories.map((category, i) => {
+   879→                let skills: string[] = [];
+   880→                try {
+   881→                  skills = JSON.parse(category.skills || '[]');
+   882→                } catch {
+   883→                  // ignore
+   884→                }
+   885→
+   886→                return (
+   887→                  <motion.div
+   888→                    key={category.id}
+   889→                    variants={fadeInUp}
+   890→                    initial="hidden"
+   891→                    whileInView="visible"
+   892→                    viewport={{ once: true }}
+   893→                    custom={i}
+   894→                  >
+   895→                    <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 h-full rounded-xl">
+   896→                      <CardContent className="p-5 sm:p-6">
+   897→                        <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
+   898→                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+   899→                          {category.name}
+   900→                        </h3>
+   901→                        <div className="flex flex-wrap gap-2">
+   902→                          {skills.map((skill, si) => (
+   903→                            <span
+   904→                              key={si}
+   905→                              className="px-3 py-1.5 text-xs font-medium bg-white/[0.04] text-gray-300 rounded-lg border border-white/[0.06] hover:bg-emerald-500/10 hover:text-emerald-300 hover:border-emerald-500/20 transition-all duration-200"
+   906→                            >
+   907→                              {skill}
+   908→                            </span>
+   909→                          ))}
+   910→                        </div>
+   911→                      </CardContent>
+   912→                    </Card>
+   913→                  </motion.div>
+   914→                );
+   915→              })}
+   916→            </div>
+   917→          </div>
+   918→        </section>
+   919→
+   920→        {/* ============================================================== */}
+   921→        {/*  EDUCATION SECTION                                              */}
+   922→        {/* ============================================================== */}
+   923→        <section id="education" className="py-20 sm:py-28 bg-[#0d0d0d]">
+   924→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   925→            <motion.div
+   926→              variants={fadeInUp}
+   927→              initial="hidden"
+   928→              whileInView="visible"
+   929→              viewport={{ once: true, margin: '-100px' }}
+   930→              custom={0}
+   931→            >
+   932→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   933→                <span className="text-emerald-500">Education</span>
+   934→              </h2>
+   935→              <Separator className="bg-emerald-500/30 w-16 mb-12" />
+   936→            </motion.div>
+   937→
+   938→            <div className="space-y-4 sm:space-y-6">
+   939→              {education.map((edu, i) => (
+   940→                <motion.div
+   941→                  key={edu.id}
+   942→                  variants={fadeInUp}
+   943→                  initial="hidden"
+   944→                  whileInView="visible"
+   945→                  viewport={{ once: true }}
+   946→                  custom={i}
+   947→                >
+   948→                  <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl">
+   949→                    <CardContent className="p-5 sm:p-6">
+   950→                      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+   951→                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+   952→                          <GraduationCap className="w-6 h-6 text-emerald-400" />
+   953→                        </div>
+   954→                        <div className="flex-1 space-y-2">
+   955→                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+   956→                            <h3 className="text-base sm:text-lg font-semibold text-white">{edu.degree}</h3>
+   957→                            <Badge
+   958→                              variant="outline"
+   959→                              className="border-emerald-500/20 text-emerald-400 text-xs w-fit shrink-0"
+   960→                            >
+   961→                              {edu.year}
+   962→                            </Badge>
+   963→                          </div>
+   964→                          <p className="text-emerald-400 text-sm font-medium">{edu.institution}</p>
+   965→                          {edu.details && (
+   966→                            <p className="text-gray-400 text-sm leading-relaxed">{edu.details}</p>
+   967→                          )}
+   968→                        </div>
+   969→                      </div>
+   970→                    </CardContent>
+   971→                  </Card>
+   972→                </motion.div>
+   973→              ))}
+   974→            </div>
+   975→          </div>
+   976→        </section>
+   977→
+   978→        {/* ============================================================== */}
+   979→        {/*  CONTACT SECTION                                                */}
+   980→        {/* ============================================================== */}
+   981→        <section id="contact" className="py-20 sm:py-28 bg-[#0a0a0a]">
+   982→          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   983→            <motion.div
+   984→              variants={fadeInUp}
+   985→              initial="hidden"
+   986→              whileInView="visible"
+   987→              viewport={{ once: true, margin: '-100px' }}
+   988→              custom={0}
+   989→              className="text-center"
+   990→            >
+   991→              <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+   992→                Get In <span className="text-emerald-500">Touch</span>
+   993→              </h2>
+   994→              <Separator className="bg-emerald-500/30 w-16 mb-8 mx-auto" />
+   995→              <p className="text-gray-400 text-sm sm:text-base max-w-lg mx-auto mb-10">
+   996→                Interested in working together or have a project in mind? I&apos;d love to hear from you.
+   997→              </p>
+   998→            </motion.div>
+   999→
+  1000→            <motion.div
+  1001→              variants={staggerContainer}
+  1002→              initial="hidden"
+  1003→              whileInView="visible"
+  1004→              viewport={{ once: true }}
+  1005→              className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-12"
+  1006→            >
+  1007→              <motion.a
+  1008→                variants={staggerItem}
+  1009→                href={`mailto:${profile?.email}`}
+  1010→                className="group"
+  1011→              >
+  1012→                <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl cursor-pointer h-full">
+  1013→                  <CardContent className="p-5 sm:p-6 flex flex-col items-center text-center gap-3">
+  1014→                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+  1015→                      <Mail className="w-5 h-5 text-emerald-400" />
+  1016→                    </div>
+  1017→                    <div>
+  1018→                      <p className="text-xs text-gray-500 mb-1">Email</p>
+  1019→                      <p className="text-sm text-gray-300 group-hover:text-emerald-400 transition-colors break-all">
+  1020→                        {profile?.email}
+  1021→                      </p>
+  1022→                    </div>
+  1023→                  </CardContent>
+  1024→                </Card>
+  1025→              </motion.a>
+  1026→
+  1027→              <motion.a
+  1028→                variants={staggerItem}
+  1029→                href={`https://linkedin.com/in/${profile?.linkedin}`}
+  1030→                target="_blank"
+  1031→                rel="noopener noreferrer"
+  1032→                className="group"
+  1033→              >
+  1034→                <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl cursor-pointer h-full">
+  1035→                  <CardContent className="p-5 sm:p-6 flex flex-col items-center text-center gap-3">
+  1036→                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+  1037→                      <Linkedin className="w-5 h-5 text-emerald-400" />
+  1038→                    </div>
+  1039→                    <div>
+  1040→                      <p className="text-xs text-gray-500 mb-1">LinkedIn</p>
+  1041→                      <p className="text-sm text-gray-300 group-hover:text-emerald-400 transition-colors">
+  1042→                        View Profile
+  1043→                      </p>
+  1044→                    </div>
+  1045→                  </CardContent>
+  1046→                </Card>
+  1047→              </motion.a>
+  1048→
+  1049→              <motion.a
+  1050→                variants={staggerItem}
+  1051→                href={`tel:${profile?.phone}`}
+  1052→                className="group"
+  1053→              >
+  1054→                <Card className="bg-white/[0.02] border-white/[0.06] hover:border-emerald-500/20 transition-all duration-300 rounded-xl cursor-pointer h-full">
+  1055→                  <CardContent className="p-5 sm:p-6 flex flex-col items-center text-center gap-3">
+  1056→                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+  1057→                      <Phone className="w-5 h-5 text-emerald-400" />
+  1058→                    </div>
+  1059→                    <div>
+  1060→                      <p className="text-xs text-gray-500 mb-1">Phone</p>
+  1061→                      <p className="text-sm text-gray-300 group-hover:text-emerald-400 transition-colors">
+  1062→                        {profile?.phone}
+  1063→                      </p>
+  1064→                    </div>
+  1065→                  </CardContent>
+  1066→                </Card>
+  1067→              </motion.a>
+  1068→            </motion.div>
+  1069→
+  1070→            {/* CTA */}
+  1071→            <motion.div
+  1072→              variants={fadeInUp}
+  1073→              initial="hidden"
+  1074→              whileInView="visible"
+  1075→              viewport={{ once: true }}
+  1076→              custom={3}
+  1077→              className="text-center"
+  1078→            >
+  1079→              <Button
+  1080→                asChild
+  1081→                size="lg"
+  1082→                className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-8 py-6 text-base rounded-xl"
+  1083→              >
+  1084→                <a href={`mailto:${profile?.email}`}>
+  1085→                  Send an Email
+  1086→                  <Mail className="w-4 h-4 ml-2" />
+  1087→                </a>
+  1088→              </Button>
+  1089→            </motion.div>
+  1090→          </div>
+  1091→        </section>
+  1092→      </main>
+  1093→
+  1094→      {/* ================================================================ */}
+  1095→      {/*  FOOTER                                                          */}
+  1096→      {/* ================================================================ */}
+  1097→      <footer className="mt-auto bg-[#080808] border-t border-white/5">
+  1098→        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  1099→          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+  1100→            <div className="flex items-center gap-3">
+  1101→              <span className="text-lg font-bold">
+  1102→                <span className="text-white">M</span>
+  1103→                <span className="text-emerald-500">.</span>
+  1104→                <span className="text-white">A</span>
+  1105→              </span>
+  1106→              <span className="text-gray-600 text-sm">|</span>
+  1107→              <span className="text-gray-500 text-xs">
+  1108→                © {new Date().getFullYear()} Mohamed Medhat Ahmed. All rights reserved.
+  1109→              </span>
+  1110→            </div>
+  1111→
+  1112→            <button
+  1113→              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+  1114→              className="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 flex items-center justify-center text-gray-400 hover:text-emerald-400 transition-all cursor-pointer"
+  1115→              aria-label="Back to top"
+  1116→            >
+  1117→              <ChevronUp className="w-5 h-5" />
+  1118→            </button>
+  1119→          </div>
+  1120→        </div>
+  1121→      </footer>
+  1122→    </div>
+  1123→  );
+  1124→}
+  1125→

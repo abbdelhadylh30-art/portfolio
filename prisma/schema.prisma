@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  name          String   @default("Mohamed Medhat Ahmed")
+  title         String   @default("Marketing & Business Development Specialist")
+  email         String   @default("Mohamed.ahmed9009mm@gmail.com")
+  phone         String   @default("+20 112 535 3053")
+  linkedin      String   @default("mohamed-ahmed-210b41394")
+  bio           String   @default("I'm a marketing and business development professional with hands-on experience across FMCG, B2B, and digital industries.")
+  heroSubtitle  String   @default("Marketing & Business Development")
+  quote         String   @default("Understand the problem deeply, then solve it creatively.")
+  stat1Value    String   @default("2x")
+  stat1Label    String   @default("Degree holder")
+  stat1Sub      String   @default("Greenwich & MSA University")
+  stat2Value    String   @default("10+")
+  stat2Label    String   @default("Team members led")
+  stat2Sub      String   @default("in a supervisory role")
+  stat3Value    String   @default("3+")
+  stat3Label    String   @default("Industries")
+  stat3Sub      String   @default("FMCG, B2B, digital, operations")
+  stat4Value    String   @default("C1")
+  stat4Label    String   @default("English proficiency")
+  stat4Sub      String   @default("bilingual Arabic/English")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  category    String   @default("Brand Audit")
+  title       String
+  description String
+  tags        String   @default("")
+  imageUrl    String   @default("")
+  order       Int      @default(0)
+  featured    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Experience {
+  id          String   @id @default(cuid())
+  role        String
+  company     String   @default("")
+  period      String   @default("")
+  description String   @default("")
+  highlights  String   @default("")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String   @default("")
+  description String   @default("")
+  imageUrl    String   @default("")
+  projectId   String   @default("")
+  tags        String   @default("")
+  details     String   @default("{}")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SkillCategory {
+  id        String   @id @default(cuid())
+  name      String
+  skills    String   @default("[]")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Education {
+  id          String   @id @default(cuid())
+  degree      String
+  institution String   @default("")
+  year        String   @default("")
+  details     String   @default("")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
