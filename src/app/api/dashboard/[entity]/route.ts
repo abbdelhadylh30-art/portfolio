@@ -26,6 +26,49 @@ function validateEntity(entity: string): entity is EntityName {
   return VALID_ENTITIES.includes(entity as EntityName);
 }
 
+// Slugify a title into a URL-safe slug
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// Ensure data has a unique slug for project entities
+async function ensureProjectSlug(
+  data: Record<string, unknown>,
+  excludeId?: string
+): Promise<void> {
+  if (!("slug" in data) || !data.slug) {
+    const base = slugify(String(data.title || "untitled-project"));
+    data.slug = base;
+  }
+  // Verify uniqueness — append -2, -3, etc. if needed
+  const candidate = String(data.slug);
+  const existing = await db.project.findFirst({
+    where: { slug: candidate, ...(excludeId ? { id: { not: excludeId } } : {}) },
+    select: { id: true },
+  });
+  if (existing) {
+    let suffix = 2;
+    let unique = `${candidate}-${suffix}`;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const clash = await db.project.findFirst({
+        where: { slug: unique, ...(excludeId ? { id: { not: excludeId } } : {}) },
+        select: { id: true },
+      });
+      if (!clash) break;
+      suffix += 1;
+      unique = `${candidate}-${suffix}`;
+    }
+    data.slug = unique;
+  }
+}
+
 // GET - List all items or get a single item by id
 export async function GET(
   request: NextRequest,
@@ -120,6 +163,11 @@ export async function POST(
     const { id: _id, ...data } = body;
     void _id;
 
+    // For projects, ensure a unique slug exists
+    if (entity === "projects") {
+      await ensureProjectSlug(data);
+    }
+
     const model = ENTITY_MAP[entity];
     const item = await model.delegate.create({
       data,
@@ -187,6 +235,11 @@ export async function PUT(
         { error: `${entity} item not found` },
         { status: 404 }
       );
+    }
+
+    // For projects, ensure slug is set and remains unique (excluding this id)
+    if (entity === "projects") {
+      await ensureProjectSlug(data, id);
     }
 
     const item = await model.delegate.update({

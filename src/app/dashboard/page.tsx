@@ -612,15 +612,26 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
     setShowForm(true);
   };
 
-  const entityFields: Record<string, { key: string; label: string; type: string; options?: string[] }[]> = {
+  const entityFields: Record<string, { key: string; label: string; type: string; options?: string[]; hint?: string; group?: string }[]> = {
     projects: [
-      { key: 'title', label: 'Title', type: 'text' },
-      { key: 'category', label: 'Category', type: 'select', options: ['Brand Audit', 'Campaign', 'Campaign Concept', 'Case Study', 'Digital', 'Research'] },
-      { key: 'imageUrl', label: 'Project Image', type: 'image' },
-      { key: 'description', label: 'Description', type: 'textarea' },
-      { key: 'tags', label: 'Tags (comma-separated)', type: 'text' },
-      { key: 'featured', label: 'Featured (true/false)', type: 'text' },
-      { key: 'order', label: 'Order', type: 'number' },
+      { key: 'title', label: 'Title', type: 'text', group: 'Basic' },
+      { key: 'slug', label: 'Slug (URL)', type: 'slug', group: 'Basic', hint: 'Auto-generated from title. Used in /projects/[slug] URL.' },
+      { key: 'category', label: 'Category', type: 'select', options: ['Brand Audit', 'Campaign', 'Campaign Concept', 'Case Study', 'Digital', 'Research'], group: 'Basic' },
+      { key: 'imageUrl', label: 'Project Image / Logo', type: 'image', group: 'Basic' },
+      { key: 'description', label: 'Short Description (card summary)', type: 'textarea', group: 'Basic' },
+      { key: 'tags', label: 'Tags (comma-separated)', type: 'text', group: 'Basic' },
+      { key: 'featured', label: 'Featured (true/false)', type: 'text', group: 'Basic' },
+      { key: 'order', label: 'Order', type: 'number', group: 'Basic' },
+
+      { key: 'client', label: 'Client', type: 'text', group: 'Detail Page' },
+      { key: 'timeline', label: 'Timeline', type: 'text', group: 'Detail Page' },
+      { key: 'role', label: 'Role', type: 'text', group: 'Detail Page' },
+      { key: 'overview', label: 'Overview — The Engagement', type: 'long-text', group: 'Detail Page', hint: '2–4 paragraphs. Use blank lines to separate paragraphs.' },
+      { key: 'challenge', label: 'Challenge — The Problem', type: 'long-text', group: 'Detail Page', hint: '2–4 paragraphs. Use blank lines to separate paragraphs.' },
+      { key: 'approach', label: 'Approach — The Method', type: 'long-text', group: 'Detail Page', hint: '2–4 paragraphs. Use blank lines to separate paragraphs.' },
+      { key: 'outcome', label: 'Outcome — The Result', type: 'long-text', group: 'Detail Page', hint: '2–4 paragraphs. Use blank lines to separate paragraphs.' },
+      { key: 'keyTakeaways', label: 'Key Takeaways (one per line)', type: 'long-text', group: 'Detail Page', hint: 'Each line becomes a numbered bullet on the detail page.' },
+      { key: 'galleryImages', label: 'Gallery Images (one URL per line)', type: 'long-text', group: 'Detail Page', hint: 'Image URLs (one per line). Shown in a grid on the detail page.' },
     ],
     experiences: [
       { key: 'role', label: 'Role', type: 'text' },
@@ -771,45 +782,106 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
                 <X size={20} />
               </button>
             </div>
-            {fields.map(f => (
-              <div key={f.key} style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>{f.label}</label>
-                {f.type === 'textarea' ? (
-                  <textarea
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
-                  />
-                ) : f.type === 'image' ? (
-                  <ImageUpload
-                    value={formData[f.key] || ''}
-                    onChange={url => setFormData({ ...formData, [f.key]: url })}
-                  />
-                ) : f.type === 'select' ? (
-                  <select
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    style={inputStyle}
-                  >
-                    <option value="">Select...</option>
-                    {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                ) : f.type === 'number' ? (
-                  <input
-                    type="number"
-                    value={formData[f.key] || 0}
-                    onChange={e => setFormData({ ...formData, [f.key]: parseInt(e.target.value) || 0 })}
-                    style={inputStyle}
-                  />
-                ) : (
-                  <input
-                    value={formData[f.key] || ''}
-                    onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
-                    style={inputStyle}
-                  />
-                )}
-              </div>
-            ))}
+            {/* Group fields by `group` property, render section headers when present */}
+            {(() => {
+              let lastGroup: string | undefined = undefined;
+              return fields.map(f => {
+                const showGroupHeader = f.group && f.group !== lastGroup;
+                lastGroup = f.group;
+                return (
+                  <React.Fragment key={f.key}>
+                    {showGroupHeader && (
+                      <div style={{
+                        margin: '1.5rem 0 0.75rem',
+                        padding: '0.5rem 0 0.4rem',
+                        borderBottom: `1px solid ${c.border}`,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                      }}>
+                        <div style={{ width: 4, height: 14, background: c.gold, borderRadius: 2 }} />
+                        <div style={{
+                          fontSize: '0.72rem', fontWeight: 700, color: c.gold,
+                          letterSpacing: '0.12em', textTransform: 'uppercase',
+                        }}>{f.group}</div>
+                      </div>
+                    )}
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: c.gray400, marginBottom: 6 }}>{f.label}</label>
+                      {f.hint && (
+                        <div style={{ fontSize: '0.72rem', color: c.gray600, marginBottom: 6, lineHeight: 1.4 }}>{f.hint}</div>
+                      )}
+                      {f.type === 'textarea' ? (
+                        <textarea
+                          value={formData[f.key] || ''}
+                          onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                          style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
+                        />
+                      ) : f.type === 'long-text' ? (
+                        <textarea
+                          value={formData[f.key] || ''}
+                          onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                          style={{ ...inputStyle, minHeight: 180, resize: 'vertical', fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}
+                        />
+                      ) : f.type === 'slug' ? (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            value={formData[f.key] || ''}
+                            onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                            placeholder="auto-generated from title"
+                            style={{ ...inputStyle, flex: 1 }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const t = (formData.title || '').toLowerCase()
+                                .replace(/[^a-z0-9\s-]/g, '')
+                                .replace(/\s+/g, '-')
+                                .replace(/-+/g, '-')
+                                .replace(/^-|-$/g, '');
+                              setFormData({ ...formData, [f.key]: t });
+                            }}
+                            style={{
+                              padding: '0 14px', background: c.inputBg,
+                              border: `1px solid ${c.border}`, borderRadius: 8,
+                              color: c.gold, fontSize: '0.78rem', cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Generate
+                          </button>
+                        </div>
+                      ) : f.type === 'image' ? (
+                        <ImageUpload
+                          value={formData[f.key] || ''}
+                          onChange={url => setFormData({ ...formData, [f.key]: url })}
+                        />
+                      ) : f.type === 'select' ? (
+                        <select
+                          value={formData[f.key] || ''}
+                          onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                          style={inputStyle}
+                        >
+                          <option value="">Select...</option>
+                          {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : f.type === 'number' ? (
+                        <input
+                          type="number"
+                          value={formData[f.key] || 0}
+                          onChange={e => setFormData({ ...formData, [f.key]: parseInt(e.target.value) || 0 })}
+                          style={inputStyle}
+                        />
+                      ) : (
+                        <input
+                          value={formData[f.key] || ''}
+                          onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                          style={inputStyle}
+                        />
+                      )}
+                    </div>
+                  </React.Fragment>
+                );
+              });
+            })()}
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: '1.5rem' }}>
               <button onClick={() => { setShowForm(false); setEditItem(null); }} style={{
                 padding: '10px 20px', background: c.inputBg, border: `1px solid ${c.border}`,

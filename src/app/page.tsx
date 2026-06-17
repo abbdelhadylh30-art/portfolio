@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Mail,
   Phone,
@@ -56,11 +57,16 @@ interface ProfileData {
 
 interface ProjectData {
   id: string;
+  slug: string;
   category: string;
   title: string;
   description: string;
   tags: string;
   imageUrl: string;
+  overview?: string;
+  challenge?: string;
+  approach?: string;
+  outcome?: string;
   order: number;
   featured: boolean;
 }
@@ -624,12 +630,18 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
         {projects.map((project) => {
           const tags = project.tags ? project.tags.split(',').map(t => t.trim()) : [];
           const imgSrc = getProjectImage(project);
+          const hasDetail = project.overview || project.challenge || project.approach || project.outcome;
           return (
-            <div key={project.id} style={{
-              background: colors.navyLight,
-              border: activeProject === project.id ? `1.5px solid ${colors.gold}` : '1px solid rgba(200,150,62,0.1)',
-              borderRadius: 16, overflow: 'hidden', transition: 'all 0.3s', cursor: 'pointer',
-            }} onClick={() => setActiveProject(activeProject === project.id ? null : project.id)}
+            <Link
+              key={project.id}
+              href={`/projects/${project.slug}`}
+              style={{
+                display: 'block',
+                background: colors.navyLight,
+                border: '1px solid rgba(200,150,62,0.1)',
+                borderRadius: 16, overflow: 'hidden', transition: 'all 0.3s',
+                textDecoration: 'none',
+              }}
               className="project-card"
             >
               {/* Project Image / Logo */}
@@ -666,6 +678,19 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
                 }}>
                   {project.category}
                 </div>
+                {/* Read case study badge */}
+                {hasDetail && (
+                  <div style={{
+                    position: 'absolute', bottom: 12, right: 12,
+                    background: colors.gold, color: colors.navy,
+                    borderRadius: '999px', padding: '0.3rem 0.75rem',
+                    fontSize: '0.7rem', fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    Read case study <ArrowRight size={12} />
+                  </div>
+                )}
               </div>
 
               <div style={{ padding: '1.5rem' }}>
@@ -694,7 +719,7 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
                   ))}
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
