@@ -1,0 +1,472 @@
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Dashboard — Admin Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg-primary: #faf8f5;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-input: #f3efe8;
+    --border: #e8e2d8;
+    --text-primary: #1a1816;
+    --text-secondary: #5a5550;
+    --text-muted: #7a7570;
+    --accent: #c45d2c;
+    --accent-hover: #a84d24;
+    --accent-light: #c45d2c;
+    --accent-bg: rgba(196, 93, 44, 0.08);
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03);
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+
+  .login-overlay {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg-primary); z-index: 1000;
+  }
+  .login-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow-md);
+  }
+  .login-card h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .login-card h1 span { color: var(--accent); }
+  .login-card .subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 14px; }
+  .login-error { color: var(--danger); font-size: 13px; margin-bottom: 12px; display: none; background: rgba(220,38,38,0.08); padding: 8px 12px; border-radius: 8px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196,93,44,0.1);
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(220,38,38,0.3); }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  .app { display: none; min-height: 100vh; }
+  .app.active { display: flex; }
+
+  .sidebar {
+    width: 260px; background: var(--bg-card); border-right: 1px solid var(--border);
+    padding: 24px 16px; display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto;
+  }
+  .sidebar-logo { font-size: 20px; font-weight: 700; margin-bottom: 4px; padding: 0 8px; }
+  .sidebar-logo span { color: var(--accent); }
+  .sidebar-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 32px; padding: 0 8px; }
+  .nav-section { margin-bottom: 24px; }
+  .nav-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px; padding: 0 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+    border: none; background: none; width: 100%; text-align: left; font-family: inherit;
+  }
+  .nav-item:hover { background: var(--bg-input); color: var(--text-primary); }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .main-content { margin-left: 260px; flex: 1; padding: 32px; }
+
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .page-header h2 { font-size: 24px; font-weight: 700; }
+  .page-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; box-shadow: var(--shadow);
+  }
+  .card:hover { border-color: #d4c8bc; }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .card-title { font-size: 16px; font-weight: 600; }
+  .card-actions { display: flex; gap: 8px; }
+  .card-body { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+  .card-meta { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .tag {
+    display: inline-block; padding: 4px 10px; background: var(--accent-bg);
+    color: var(--accent); border-radius: 6px; font-size: 12px; font-weight: 500;
+  }
+  .order-badge { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,24,22,0.5); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; z-index: 2000; display: none;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 32px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal h3 { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 12px 20px; border-radius: 8px; font-size: 14px; animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .toast-success { background: var(--accent); color: #fff; }
+  .toast-error { background: var(--danger); color: #fff; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .empty-state p { font-size: 14px; margin-bottom: 16px; }
+
+  .status-bar {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .status-text { font-size: 13px; color: var(--text-secondary); }
+
+  @media (max-width: 768px) {
+    .sidebar { position: relative; width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
+    .app.active { flex-direction: column; }
+    .main-content { margin-left: 0; padding: 16px; }
+    .nav-section { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 0; }
+    .nav-item { font-size: 12px; padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h1>Dashboard <span>Panel</span></h1>
+    <p class="subtitle">Sign in to manage your portfolio content</p>
+    <div class="login-error" id="loginError">Invalid username or password</div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Enter username" value="admin">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Enter password" value="admin123">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">M.A <span>Dashboard</span></div>
+    <div class="sidebar-subtitle">Portfolio Admin Panel</div>
+    <div class="nav-section">
+      <div class="nav-section-title">Content</div>
+      <button class="nav-item active" data-page="profile" onclick="switchPage('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+      <button class="nav-item" data-page="projects" onclick="switchPage('projects')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Projects
+      </button>
+      <button class="nav-item" data-page="experiences" onclick="switchPage('experiences')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Experience
+      </button>
+      <button class="nav-item" data-page="campaigns" onclick="switchPage('campaigns')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Campaigns
+      </button>
+      <button class="nav-item" data-page="skills" onclick="switchPage('skills')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        Skills
+      </button>
+      <button class="nav-item" data-page="education" onclick="switchPage('education')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+        Education
+      </button>
+    </div>
+    <div class="nav-section" style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border);">
+      <button class="nav-item" onclick="window.open('/','_blank')" style="color:var(--text-secondary)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Portfolio
+      </button>
+      <button class="nav-item" onclick="handleLogout()" style="color:var(--danger)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <div class="status-text">Connected to Portfolio API — Changes appear instantly on the live site</div>
+    </div>
+    <div id="pageContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+var authToken = localStorage.getItem('dashboard_token') || '';
+var currentPage = 'profile';
+
+function handleLogin() {
+  var username = document.getElementById('loginUsername').value;
+  var password = document.getElementById('loginPassword').value;
+  fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: username, password: password })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('Invalid');
+    return res.json();
+  }).then(function(data) {
+    authToken = data.token;
+    localStorage.setItem('dashboard_token', authToken);
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('app').classList.add('active');
+    switchPage('profile');
+  }).catch(function() {
+    document.getElementById('loginError').style.display = 'block';
+  });
+}
+
+function handleLogout() {
+  authToken = '';
+  localStorage.removeItem('dashboard_token');
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+}
+
+function api(endpoint, options) {
+  options = options || {};
+  var headers = Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken }, options.headers || {});
+  return fetch(endpoint, Object.assign({}, options, { headers: headers })).then(function(res) {
+    if (res.status === 401) { handleLogout(); throw new Error('Unauthorized'); }
+    if (!res.ok) return res.json().catch(function() { return { error: 'Request failed' }; }).then(function(err) { throw new Error(err.error || 'Request failed'); });
+    return res.json();
+  });
+}
+
+function showToast(message, type) {
+  type = type || 'success';
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(function() { toast.remove(); }, 3000);
+}
+
+function openModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+function switchPage(page) {
+  currentPage = page;
+  var items = document.querySelectorAll('.nav-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  var el = document.querySelector('[data-page="' + page + '"]');
+  if (el) el.classList.add('active');
+  renderPage(page);
+}
+
+function renderPage(page) {
+  var content = document.getElementById('pageContent');
+  content.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted)">Loading...</div>';
+  try {
+    if (page === 'profile') renderProfile();
+    else if (page === 'projects') renderProjects();
+    else if (page === 'experiences') renderExperiences();
+    else if (page === 'campaigns') renderCampaigns();
+    else if (page === 'skills') renderSkills();
+    else if (page === 'education') renderEducation();
+  } catch (e) {
+    content.innerHTML = '<div class="empty-state"><p>Error: ' + e.message + '</p></div>';
+  }
+}
+
+function renderProfile() {
+  api('/api/profile').then(function(profile) {
+    var fields = [
+      ['name','Full Name'],['title','Title'],['email','Email'],['phone','Phone'],['linkedin','LinkedIn'],
+      ['heroSubtitle','Hero Subtitle'],['quote','Quote'],['bio','Bio','textarea'],
+      ['stat1Value','Stat 1 Value'],['stat1Label','Stat 1 Label'],['stat1Sub','Stat 1 Sub'],
+      ['stat2Value','Stat 2 Value'],['stat2Label','Stat 2 Label'],['stat2Sub','Stat 2 Sub'],
+      ['stat3Value','Stat 3 Value'],['stat3Label','Stat 3 Label'],['stat3Sub','Stat 3 Sub'],
+      ['stat4Value','Stat 4 Value'],['stat4Label','Stat 4 Label'],['stat4Sub','Stat 4 Sub']
+    ];
+    var html = '<div class="page-header"><div><h2>Profile Settings</h2><p>Update your personal information and hero section</p></div></div><div class="card">';
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      var val = profile[f[0]] || '';
+      if (f[2] === 'textarea') {
+        html += '<div class="form-group"><label>'+f[1]+'</label><textarea id="field_'+f[0]+'">'+esc(val)+'</textarea></div>';
+      } else {
+        html += '<div class="form-group"><label>'+f[1]+'</label><input id="field_'+f[0]+'" value="'+escA(val)+'"></div>';
+      }
+    }
+    html += '<div style="margin-top:20px"><button class="btn btn-primary" onclick="saveProfile()">Save Changes</button></div></div>';
+    document.getElementById('pageContent').innerHTML = html;
+  }).catch(function(e) {
+    document.getElementById('pageContent').innerHTML = '<div class="empty-state"><p>Error: '+e.message+'</p></div>';
+  });
+}
+
+function saveProfile() {
+  var keys = ['name','title','email','phone','linkedin','heroSubtitle','quote','bio','stat1Value','stat1Label','stat1Sub','stat2Value','stat2Label','stat2Sub','stat3Value','stat3Label','stat3Sub','stat4Value','stat4Label','stat4Sub'];
+  var data = {};
+  for (var i = 0; i < keys.length; i++) { var el = document.getElementById('field_'+keys[i]); data[keys[i]] = el ? el.value : ''; }
+  api('/api/profile').then(function(profile) {
+    data.id = profile.id;
+    return api('/api/dashboard/profile', { method: 'PUT', body: JSON.stringify(data) });
+  }).then(function() {
+    showToast('Profile updated! Changes are live on your portfolio.');
+  }).catch(function(e) { showToast('Error: '+e.message,'error'); });
+}
+
+function renderList(entity, title, subtitle, titleKey, subtitleKey, descKey, tagsKey) {
+  api('/api/dashboard/'+entity).then(function(items) {
+    var html = '<div class="page-header"><div><h2>'+title+'</h2><p>'+subtitle+'</p></div><button class="btn btn-primary" onclick="addItem(\\''+entity+'\\')">+ Add New</button></div>';
+    if (items.length === 0) {
+      html += '<div class="empty-state"><p>No items yet. Add your first one!</p></div>';
+    } else {
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        html += '<div class="card"><div class="card-header"><div><div class="card-title">'+esc(item[titleKey]||'Untitled')+'</div>';
+        if (subtitleKey && item[subtitleKey]) html += '<div style="color:var(--text-muted);font-size:13px;margin-top:4px">'+esc(item[subtitleKey])+'</div>';
+        html += '<div class="order-badge">Order: '+(item.order||0)+'</div></div>';
+        html += '<div class="card-actions"><button class="btn btn-secondary btn-sm" onclick="editItem(\\''+entity+'\\',\\''+item.id+'\\')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteItem(\\''+entity+'\\',\\''+item.id+'\\',\\''+escA(item[titleKey]||'this item')+'\\')">Delete</button></div></div>';
+        if (descKey && item[descKey]) { var d = String(item[descKey]).substring(0,200); if(item[descKey].length>200) d+='...'; html += '<div class="card-body">'+esc(d)+'</div>'; }
+        if (tagsKey && item[tagsKey]) { var tags = item[tagsKey].split(','); html += '<div class="card-meta">'; for(var j=0;j<tags.length;j++) html += '<span class="tag">'+esc(tags[j].trim())+'</span>'; html += '</div>'; }
+        html += '</div>';
+      }
+    }
+    document.getElementById('pageContent').innerHTML = html;
+  }).catch(function(e) {
+    document.getElementById('pageContent').innerHTML = '<div class="empty-state"><p>Error: '+e.message+'</p></div>';
+  });
+}
+
+function renderProjects() { renderList('projects','Projects','Manage your portfolio projects','title','category','description','tags'); }
+function renderExperiences() { renderList('experiences','Experience','Manage your work experience','role','company','description','highlights'); }
+function renderCampaigns() { renderList('campaigns','Campaigns','Manage your campaign concepts','title','subtitle','description','tags'); }
+function renderSkills() { renderList('skills','Skills','Manage your skill categories','name',null,null,'skills'); }
+function renderEducation() { renderList('education','Education','Manage your education entries','degree','institution','details',null); }
+
+var entityForms = {
+  projects: [['title','Title','text'],['category','Category','select',['Brand Audit','Campaign','Digital','Research']],['description','Description','textarea'],['tags','Tags (comma-separated)','text'],['order','Order','number']],
+  experiences: [['role','Role','text'],['company','Company','text'],['period','Period','text'],['description','Description','textarea'],['highlights','Highlights (comma-separated)','text'],['order','Order','number']],
+  campaigns: [['title','Title','text'],['subtitle','Subtitle','text'],['description','Description','textarea'],['tags','Tags (comma-separated)','text'],['details','Details (JSON)','textarea'],['order','Order','number']],
+  skills: [['name','Category Name','text'],['skills','Skills (JSON array)','textarea'],['order','Order','number']],
+  education: [['degree','Degree','text'],['institution','Institution','text'],['year','Year','text'],['details','Details','textarea'],['order','Order','number']]
+};
+
+function addItem(entity) { showFormModal(entity,'Add New',entityForms[entity]||[],null); }
+
+function editItem(entity, id) {
+  api('/api/dashboard/'+entity).then(function(items) {
+    var item = null;
+    for(var i=0;i<items.length;i++) if(items[i].id===id){item=items[i];break;}
+    if(item) showFormModal(entity,'Edit',entityForms[entity]||[],item);
+  });
+}
+
+function showFormModal(entity, action, formFields, item) {
+  var html = '<h3>'+action+' Item</h3>';
+  for(var i=0;i<formFields.length;i++) {
+    var f = formFields[i];
+    var val = item ? (item[f[0]]||'') : (f[2]==='number'?'0':'');
+    html += '<div class="form-group"><label>'+f[1]+'</label>';
+    if(f[2]==='textarea') html += '<textarea id="modal_'+f[0]+'">'+esc(String(val))+'</textarea>';
+    else if(f[2]==='select') { html += '<select id="modal_'+f[0]+'">'; for(var j=0;j<f[3].length;j++) html += '<option value="'+f[3][j]+'"'+(val===f[3][j]?' selected':'')+'>'+f[3][j]+'</option>'; html += '</select>'; }
+    else if(f[2]==='number') html += '<input type="number" id="modal_'+f[0]+'" value="'+escA(String(val))+'">';
+    else html += '<input type="text" id="modal_'+f[0]+'" value="'+escA(String(val))+'">';
+    html += '</div>';
+  }
+  var idStr = item ? "'"+item.id+"'" : 'null';
+  html += '<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveItem(\\''+entity+'\\','+idStr+')">Save</button></div>';
+  openModal(html);
+}
+
+function saveItem(entity, id) {
+  var formFields = entityForms[entity]||[];
+  var data = {};
+  for(var i=0;i<formFields.length;i++) {
+    var f = formFields[i];
+    var el = document.getElementById('modal_'+f[0]);
+    if(!el) continue;
+    data[f[0]] = f[2]==='number' ? (parseInt(el.value)||0) : el.value;
+  }
+  var promise;
+  if(id) { data.id = id; promise = api('/api/dashboard/'+entity,{method:'PUT',body:JSON.stringify(data)}); }
+  else { promise = api('/api/dashboard/'+entity,{method:'POST',body:JSON.stringify(data)}); }
+  promise.then(function() {
+    showToast(id ? 'Item updated! Changes are live.' : 'Item created! It will appear on your portfolio.');
+    closeModal();
+    renderPage(currentPage);
+  }).catch(function(e) { showToast('Error: '+e.message,'error'); });
+}
+
+function deleteItem(entity, id, name) {
+  if(!confirm('Delete "'+name+'"? This cannot be undone.')) return;
+  api('/api/dashboard/'+entity,{method:'DELETE',body:JSON.stringify({id:id})}).then(function() {
+    showToast('Item deleted from your portfolio.');
+    renderPage(currentPage);
+  }).catch(function(e) { showToast('Error: '+e.message,'error'); });
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Auto-login
+if(authToken) {
+  fetch('/api/profile',{headers:{'Authorization':'Bearer '+authToken}}).then(function(res){
+    if(res.ok){document.getElementById('loginOverlay').style.display='none';document.getElementById('app').classList.add('active');switchPage('profile');}
+    else{authToken='';localStorage.removeItem('dashboard_token');}
+  }).catch(function(){authToken='';localStorage.removeItem('dashboard_token');});
+}
+</script>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
+  });
+}
