@@ -69,6 +69,38 @@ async function ensureProjectSlug(
   }
 }
 
+// Coerce known Boolean fields from string to actual boolean
+// (HTML forms and JSON payloads from the dashboard may send "true"/"false" strings)
+function coerceProjectBooleans(data: Record<string, unknown>): void {
+  if ("featured" in data) {
+    const v = data.featured;
+    if (typeof v === "string") {
+      data.featured = v === "true" || v === "1" || v.toLowerCase() === "yes";
+    } else if (typeof v !== "boolean") {
+      data.featured = Boolean(v);
+    }
+  }
+  // Coerce numeric fields that may arrive as strings
+  if ("order" in data && typeof data.order === "string" && data.order !== "") {
+    const n = parseInt(data.order, 10);
+    if (!Number.isNaN(n)) data.order = n;
+  }
+}
+
+// Strip empty strings for fields that have sensible DB defaults — this lets the
+// dashboard send an empty input without overwriting existing values with "".
+// (We keep "" for fields where empty is meaningful, e.g. tags/description.)
+function normalizeProjectData(data: Record<string, unknown>): void {
+  coerceProjectBooleans(data);
+  // Ensure required fields exist (Prisma would 400 otherwise)
+  if (!("title" in data) || !data.title || String(data.title).trim() === "") {
+    throw new Error("Title is required");
+  }
+  if (!("description" in data) || data.description === undefined || data.description === null) {
+    data.description = "";
+  }
+}
+
 // GET - List all items or get a single item by id
 export async function GET(
   request: NextRequest,
@@ -165,6 +197,14 @@ export async function POST(
 
     // For projects, ensure a unique slug exists
     if (entity === "projects") {
+      try {
+        normalizeProjectData(data);
+      } catch (e: unknown) {
+        return NextResponse.json(
+          { error: e instanceof Error ? e.message : "Validation failed" },
+          { status: 400 }
+        );
+      }
       await ensureProjectSlug(data);
     }
 
@@ -239,6 +279,12 @@ export async function PUT(
 
     // For projects, ensure slug is set and remains unique (excluding this id)
     if (entity === "projects") {
+      coerceProjectBooleans(data);
+      // "featured" can be omitted on PUT (partial update) — that's fine, leave it
+      if ("order" in data && typeof data.order === "string" && data.order !== "") {
+        const n = parseInt(data.order, 10);
+        if (!Number.isNaN(n)) data.order = n;
+      }
       await ensureProjectSlug(data, id);
     }
 

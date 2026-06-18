@@ -172,7 +172,21 @@ function Section({
 }
 
 function Paragraph({ children }: { children: React.ReactNode }) {
-  return <p style={{ marginBottom: "1.1rem" }}>{children}</p>;
+  return (
+    <p
+      style={{
+        marginBottom: "1.1rem",
+        // pre-line preserves embedded single \n as line breaks, while still
+        // collapsing runs of spaces/tabs. This means authors can use either
+        // blank lines (\n\n) to start a new Paragraph OR single \n for a soft
+        // line break inside a paragraph.
+        whiteSpace: "pre-line",
+        lineHeight: 1.7,
+      }}
+    >
+      {children}
+    </p>
+  );
 }
 
 /* ------------------------------------------------------------------ */

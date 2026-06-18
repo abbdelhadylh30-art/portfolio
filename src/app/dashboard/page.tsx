@@ -97,12 +97,21 @@ async function api(endpoint: string, options: RequestInit = {}) {
 function ImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [preview, setPreview] = useState(value || '');
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Pre-validate size on client side to avoid wasted uploads
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError(`File too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Max 2MB.`);
+      return;
+    }
+    setUploadError(null);
+
+    // Show local preview immediately for responsiveness
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -117,8 +126,10 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (url: strin
       });
       onChange(result.imageUrl);
       setPreview(result.imageUrl);
+      setUploadError(null);
     } catch (err: any) {
-      alert('Upload failed: ' + err.message);
+      setUploadError('Upload failed: ' + (err?.message || 'unknown error'));
+      // Fall back to keeping the local preview only if user wants to proceed with URL
     }
     setUploading(false);
   };
@@ -160,15 +171,24 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (url: strin
               {uploading ? 'Uploading...' : 'Click to upload image'}
             </span>
             <span style={{ fontSize: '0.72rem', color: c.gray600, marginTop: 4 }}>
-              JPEG, PNG, GIF, WebP — Max 5MB
+              JPEG, PNG, GIF, WebP, SVG — Max 2MB
             </span>
           </>
         )}
       </div>
+      {uploadError && (
+        <div style={{
+          marginTop: 8, padding: '8px 12px', borderRadius: 6,
+          background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+          color: '#ef4444', fontSize: '0.78rem',
+        }}>
+          {uploadError}
+        </div>
+      )}
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
         onChange={handleUpload}
         style={{ display: 'none' }}
       />
@@ -176,7 +196,7 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (url: strin
         <input
           value={value || ''}
           onChange={e => { onChange(e.target.value); setPreview(e.target.value); }}
-          placeholder="Or paste an image URL..."
+          placeholder="Or paste an image URL (e.g. /logos/foo.png)"
           style={{
             width: '100%', padding: '8px 12px', borderRadius: 8,
             background: c.inputBg, border: `1px solid ${c.border}`,
@@ -602,13 +622,18 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
 
   const openAdd = () => {
     setEditItem(null);
-    setFormData({});
+    // Sensible defaults for new items so required fields aren't blank
+    setFormData({
+      featured: true,
+      order: items.length > 0 ? Math.max(...items.map((i: any) => i.order || 0)) + 1 : 1,
+    });
     setShowForm(true);
   };
 
   const openEdit = (item: any) => {
     setEditItem(item);
-    setFormData({ ...item });
+    // Coerce boolean fields from DB string/boolean to actual boolean for the checkbox
+    setFormData({ ...item, featured: item.featured === true || item.featured === 'true' });
     setShowForm(true);
   };
 
@@ -620,7 +645,7 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
       { key: 'imageUrl', label: 'Project Image / Logo', type: 'image', group: 'Basic' },
       { key: 'description', label: 'Short Description (card summary)', type: 'textarea', group: 'Basic' },
       { key: 'tags', label: 'Tags (comma-separated)', type: 'text', group: 'Basic' },
-      { key: 'featured', label: 'Featured (true/false)', type: 'text', group: 'Basic' },
+      { key: 'featured', label: 'Featured (show on home page)', type: 'boolean', group: 'Basic', hint: 'Featured projects are highlighted on the landing page.' },
       { key: 'order', label: 'Order', type: 'number', group: 'Basic' },
 
       { key: 'client', label: 'Client', type: 'text', group: 'Detail Page' },
@@ -870,6 +895,25 @@ function ItemList({ entity, title, subtitle, titleKey, subtitleKey, descKey, tag
                           onChange={e => setFormData({ ...formData, [f.key]: parseInt(e.target.value) || 0 })}
                           style={inputStyle}
                         />
+                      ) : f.type === 'boolean' ? (
+                        <label
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 14px', borderRadius: 8,
+                            background: c.inputBg, border: `1px solid ${c.border}`,
+                            cursor: 'pointer', userSelect: 'none',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData[f.key] === true || formData[f.key] === 'true'}
+                            onChange={e => setFormData({ ...formData, [f.key]: e.target.checked })}
+                            style={{ width: 18, height: 18, accentColor: c.gold, cursor: 'pointer' }}
+                          />
+                          <span style={{ color: c.white, fontSize: '0.85rem' }}>
+                            {formData[f.key] === true || formData[f.key] === 'true' ? 'Yes — featured' : 'No — not featured'}
+                          </span>
+                        </label>
                       ) : (
                         <input
                           value={formData[f.key] || ''}
