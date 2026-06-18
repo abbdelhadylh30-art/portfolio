@@ -58,3 +58,50 @@ Stage Summary:
 - All 5 projects, 5 experiences, 3 campaigns, 5 skill categories seeded in Supabase
 - Pushed to GitHub: commit 1e2f025
 - Vercel will auto-deploy from GitHub push
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Test the full add→delete project workflow via the dashboard and report challenges, then fix them one by one
+
+Work Log:
+- Authenticated against live Vercel deployment via /api/auth (admin/admin123) — succeeded
+- Attempted POST /api/dashboard/projects with all detail fields populated
+- Hit Challenge #1: 400 Prisma validation error — `featured` field sent as string "true" but Prisma expects Boolean
+- Investigated dashboard form: `featured` was rendered as a text input, not a checkbox
+- Investigated upload endpoint: GET /api/upload returned 404 — route never existed
+- Investigated detail page: Paragraph component used default white-space, so single \n inside a paragraph collapsed
+- Investigated "Add New" flow: openAdd() set formData to {} (empty), so `featured` was undefined → Prisma 400
+
+Fixes applied (committed in 98ae80c and d3ec387):
+1. Dashboard form: changed `featured` field type from 'text' to new 'boolean' type with checkbox UI
+2. Added new field renderer for 'boolean' type — checkbox + descriptive label
+3. openAdd() now seeds featured=true and order=max+1 instead of empty form
+4. openEdit() now coerces DB value back to actual boolean for the checkbox
+5. API route (POST /api/dashboard/projects): added normalizeProjectData() that coerces string→boolean for `featured`, string→int for `order`, validates required `title`
+6. API route (PUT): added same coercion for partial updates
+7. Created /api/upload/route.ts: accepts multipart/form-data, returns base64 data URL (works on Vercel serverless with no persistent filesystem)
+8. ImageUpload component: added inline error panel (red box) below dropzone, replaced silent alert() with persistent visible error
+9. Detail page Paragraph component: added `white-space: pre-line` CSS so single \n renders as line break while \n\n still creates new paragraphs
+10. Discovered route conflict during local testing: both /dashboard/route.ts and /dashboard/page.tsx existed → Next.js threw "Conflicting route and page". Removed the legacy route.ts, kept page.tsx
+
+Verification:
+- Wrote scripts/test_full_crud.sh — full end-to-end test
+- Started local Next.js dev server (port 3001) pointed at Supabase
+- Ran full CRUD test: ALL 8 STEPS PASSED
+  ✓ Auth
+  ✓ Create with featured='true' (string) → coerced to boolean True, HTTP 201
+  ✓ Public /api/projects shows the new project
+  ✓ /projects/[slug] detail page returns 200
+  ✓ DELETE returns 200
+  ✓ /api/projects no longer shows the deleted project
+  ✓ /projects/[slug] now returns 404
+  ✓ /api/upload accepts a PNG file and returns a data:image/png;base64,... URL
+- Committed and pushed all fixes to GitHub (commit d3ec387)
+
+Stage Summary:
+- All 6 dashboard CRUD challenges identified and fixed in code
+- Local end-to-end test passes 8/8 steps
+- Vercel auto-deploy has NOT picked up the new commits yet (CDN still serving 21-hour-old build hash MTsreFOuvu_4scl2LBWUV as of last check)
+- User will need to either wait for Vercel auto-deploy, or trigger a manual redeploy from the Vercel dashboard
+- All fixes are in commit d3ec387 on the main branch
