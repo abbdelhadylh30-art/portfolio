@@ -105,3 +105,61 @@ Stage Summary:
 - Vercel auto-deploy has NOT picked up the new commits yet (CDN still serving 21-hour-old build hash MTsreFOuvu_4scl2LBWUV as of last check)
 - User will need to either wait for Vercel auto-deploy, or trigger a manual redeploy from the Vercel dashboard
 - All fixes are in commit d3ec387 on the main branch
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Discover more UX faults in the project creation flow and fix them
+
+Work Log:
+- Started local Next.js dev server (port 3001) connected to Supabase
+- Used agent-browser to walk through the full create-project flow as a real user would
+- Took 21 screenshots documenting each issue
+- Discovered 15 distinct UX faults plus 3 bonus improvement opportunities
+- All fixes applied to src/app/dashboard/page.tsx (single file, +633 / -250 lines)
+- Re-tested every fix in the browser against the local dev server
+
+UX Faults Discovered & Fixed:
+1. alert() for errors and success — intrusive, ugly, no styling → replaced with styled toast notifications
+2. Escape key didn't close the modal → added Escape handler
+3. Sidebar z-index (91) was higher than modal z-index (50), so clicks on the left side of the modal hit the sidebar, not the overlay → modal bumped to z=200
+4. No save success indication → toast + 4-second gold highlight on the new/edited item in the list
+5. Slug 'Generate' button did nothing if title was empty → now shows a warning toast
+6. Save button buried at y=2942 in a 519px modal — user had to scroll through 6 viewport-heights → modal redesigned with sticky header + scrollable body + sticky footer (Save always visible)
+7. No required field indicators → added red asterisks on Title, Description, etc.
+8. No maxLength on any input → added reasonable limits (200/400/4000 chars)
+9. Image upload had no 'Remove image' button → added next to the URL input
+10. No character count → added count display that turns gold at 80% and red over limit
+11. Cancel silently discarded changes → now warns 'Discard your changes?' if form is dirty
+12. Mobile Save button off-screen → fixed by the sticky footer
+13. Mobile sidebar toggle completely broken — the .open CSS class existed but the React code never applied it → now uses className={\`dashboard-sidebar${sidebarOpen ? ' open' : ''}\`}
+14. Changing slug of existing project broke URLs silently → now triggers a confirm dialog
+15. Delete used native confirm() → replaced with styled modal + type-name-to-confirm for projects
+
+Bonus improvements:
+- '● Unsaved changes (press Esc to discard)' indicator in modal header
+- Project list items show clickable /slug link to detail page
+- Featured status shown as ★/○ in list
+- 'Editing existing item' / 'Creating new item' label in sticky footer
+- Mobile sidebar overlay now actually visible (display:none was never overridden)
+
+Verification:
+- Walked through the full flow in agent-browser after fixes
+- Escape closes modal ✅
+- Escape with dirty form triggers 'Discard your changes?' confirm ✅
+- Cancel with dirty form triggers same confirm ✅
+- Delete opens styled modal ✅
+- Delete button disabled until user types exact project name ✅
+- Save shows success toast ✅
+- New item highlighted in list ✅
+- Mobile sidebar opens on menu button click ✅
+- Mobile sidebar closes on nav item click ✅
+- Required asterisks visible ✅
+- Character counts visible ✅
+- 'Remove image' button appears when image is set ✅
+
+Stage Summary:
+- All 15 UX faults fixed in commit 62d09d4
+- Pushed to GitHub main branch
+- Vercel will auto-deploy (user may need to trigger manual redeploy if CDN doesn't pick it up)
+- The dashboard project creation flow is now production-grade
