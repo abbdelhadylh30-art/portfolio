@@ -221,3 +221,32 @@ Stage Summary:
 - The static JSON-LD fallback in the layout is intentionally minimal (hardcoded name/jobTitle/knowsAbout). The dynamic, profile-aware version with real contact info is only on the homepage where it can fail gracefully.
 - Files modified: src/app/layout.tsx (removed db import, removed async buildPersonJsonLd(), added static JSON-LD), src/app/page.tsx (added dynamic JSON-LD render in page body).
 - Pending: monitor Vercel redeploy of commit d42f27f. The site should be back online within ~1-2 minutes of the push.
+
+---
+Task ID: 6
+Agent: Main Agent
+Task: Hotfix 2 — Vercel deploy STILL crashing after hotfix 1 (new digest: 1677461120). The layout fix wasn't enough.
+
+Work Log:
+- User reported the site was still showing "Application error: a server-side exception has occurred" with a NEW digest (1677461120, different from the previous 700109800). This proved that hotfix 1 (removing DB calls from layout.tsx) fixed the layout-level crash but something else was still throwing.
+- Root cause analysis: even though page.tsx had Promise.all + .catch() around the db calls, this pattern doesn't catch synchronous Prisma client initialization failures. The PrismaClient constructor runs at module load time (when @/lib/db is imported), and if it throws, the .catch() on the awaited query never fires. Also, generateMetadata() could throw if NEXT_PUBLIC_SITE_URL was set to a malformed URL (new URL() throws on bad input).
+- Applied three layers of defense:
+  1. src/lib/db.ts: Changed PrismaClient log config from `['query']` (always-on, including production) to dev-only. Production only logs 'error'. This eliminates unnecessary stdout writes in serverless.
+  2. src/app/page.tsx: Full rewrite for bulletproofing. generateMetadata() now has its own try/catch around both the db call AND the new URL() env-var parse. Removed the non-standard `other:` metadata fields (profile:first_name etc.) which can be rejected by some Next.js versions. The page body now uses 6 separate safeFetch*() helpers, each with its own try/catch — so even if one entity's query fails, the others succeed. The previous Promise.all + .catch() pattern wasn't catching synchronous Prisma client init failures.
+  3. src/app/sitemap.ts: Changed from top-level `import { db }` to dynamic `await import("@/lib/db")` inside the function. If Prisma client init throws at module load time, the sitemap route still returns the homepage entry instead of crashing.
+- Verified locally by setting DATABASE_URL to an invalid value (file:// SQLite URL while schema expects postgresql://) to simulate a Vercel env failure:
+  * / -> 200 (renders 'No profile data found' fallback)
+  * /dashboard -> 200
+  * /robots.txt -> 200
+  * /sitemap.xml -> 200 (returns just the homepage entry)
+  * /api/profile -> 500 (route-level catch, doesn't take down HTML)
+  * /api/projects -> 500 (route-level catch)
+  * Homepage still contains 2 JSON-LD blocks (static in head + dynamic in body)
+  * Homepage contains correct <title> and og:title metadata
+- Committed as eed53a1 "HOTFIX 2: Bulletproof SSR page against any DB error (Digest: 1677461120)" (3 files changed, 120 insertions, 48 deletions) and pushed to GitHub to trigger Vercel redeploy.
+
+Stage Summary:
+- The architectural lesson from hotfixes 1 + 2: when adding SSR database calls to a route, the failure mode must be "render fallback content" NOT "crash the whole route". The Promise.all + .catch() pattern is insufficient because it doesn't catch synchronous Prisma client init failures — only awaited query failures. Each DB call needs its own dedicated try/catch helper function.
+- The current page.tsx now has 7 layers of defense: 6 safeFetch*() helpers (each with try/catch), plus a try/catch around new URL() in generateMetadata, plus try/catch around the db call in generateMetadata. ANY failure at any layer falls back to static defaults and the page still returns 200.
+- Files modified: src/lib/db.ts (production log config), src/app/page.tsx (defensive helpers + metadata hardening), src/app/sitemap.ts (lazy db import).
+- Pending: monitor Vercel redeploy of commit eed53a1. The site should be back online within ~1-2 minutes of the push. If it STILL crashes after this commit, the problem is almost certainly NOT in our code — it would be a Vercel build error (e.g. Prisma client not generated, env var not set on Vercel) that we'd need to see the Vercel build logs to diagnose.
