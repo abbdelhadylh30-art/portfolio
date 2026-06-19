@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { db } from "@/lib/db";
 
 /* ------------------------------------------------------------------ */
 /*  Dynamic sitemap                                                    */
@@ -11,6 +10,10 @@ import { db } from "@/lib/db";
 //
 //  force-dynamic ensures the sitemap reflects newly added projects
 //  from the dashboard instead of being frozen at build time.
+//
+//  IMPORTANT: db is imported lazily inside the function so that a
+//  Prisma client init failure doesn't crash the route — we just
+//  return the homepage entry instead.
 //
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,8 +33,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Project detail pages
+  // Project detail pages — fetch lazily and defend against any error.
   try {
+    const { db } = await import("@/lib/db");
     const projects = await db.project.findMany({
       where: { slug: { not: "" } },
       orderBy: { order: "asc" },

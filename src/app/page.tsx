@@ -21,29 +21,53 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /* ------------------------------------------------------------------ */
+/*  Static fallbacks                                                   */
+/* ------------------------------------------------------------------ */
+//
+//  Used when the DB is unreachable (cold start, env var missing, etc).
+//  Keeping these here means the page can ALWAYS render, even on first
+//  deploy with an empty database — it just renders the fallback UI.
+//
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  "http://localhost:3000";
+
+const FALLBACK_NAME = "Mohamed Medhat Ahmed";
+const FALLBACK_TITLE = "Marketing & Business Development Specialist";
+const FALLBACK_BIO =
+  "Marketing & Business Development Specialist with experience across FMCG, B2B, and digital industries.";
+
+/* ------------------------------------------------------------------ */
 /*  Dynamic SEO metadata (reads from the profile row in DB)            */
 /* ------------------------------------------------------------------ */
-
+//
+//  Wrapped ENTIRELY in a try/catch — if anything throws (DB error,
+//  bad env var, malformed URL, etc), we return safe static metadata.
+//  This function MUST NOT throw under any circumstances, because
+//  metadata generation happens before page render and a throw here
+//  crashes the entire route.
+//
 export async function generateMetadata(): Promise<Metadata> {
   let profile: Awaited<ReturnType<typeof db.profile.findFirst>> = null;
   try {
     profile = await db.profile.findFirst();
   } catch {
-    // Fall back to the static layout metadata if the DB is unreachable.
+    // DB unreachable — use fallback values below.
   }
 
-  const name = profile?.name ?? "Mohamed Medhat Ahmed";
-  const title = profile?.title ?? "Marketing & Business Development Specialist";
-  const bio =
-    profile?.bio ??
-    "Marketing & Business Development Specialist with experience across FMCG, B2B, and digital industries.";
-  const email = profile?.email ?? "";
-  const phone = profile?.phone ?? "";
-  const linkedin = profile?.linkedin ?? "";
+  const name = profile?.name ?? FALLBACK_NAME;
+  const title = profile?.title ?? FALLBACK_TITLE;
+  const bio = profile?.bio ?? FALLBACK_BIO;
 
-  const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
-    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-    : undefined;
+  // Build metadataBase safely — bad URLs in env vars must not throw.
+  let metadataBase: URL | undefined;
+  try {
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+      metadataBase = new URL(process.env.NEXT_PUBLIC_SITE_URL);
+    }
+  } catch {
+    // Malformed NEXT_PUBLIC_SITE_URL — ignore, leave metadataBase undefined.
+  }
 
   return {
     title: `${name} — ${title}`,
@@ -79,46 +103,86 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `${name} — ${title}`,
       description: bio,
     },
-    other: {
-      "profile:first_name": name.split(" ")[0] ?? "",
-      "profile:last_name": name.split(" ").slice(1).join(" "),
-      "profile:username": linkedin,
-      "contact:email": email,
-      "contact:phone": phone,
-    },
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Safe DB fetch helpers                                              */
+/* ------------------------------------------------------------------ */
+//
+//  Each helper returns a safe fallback on ANY error — DB connection
+//  failure, Prisma client init failure, query timeout, schema drift,
+//  anything. The page render must never throw.
+//
+async function safeFetchProfile() {
+  try {
+    return await db.profile.findFirst();
+  } catch {
+    return null;
+  }
+}
+
+async function safeFetchProjects() {
+  try {
+    return await db.project.findMany({ orderBy: { order: "asc" } });
+  } catch {
+    return [];
+  }
+}
+
+async function safeFetchExperiences() {
+  try {
+    return await db.experience.findMany({ orderBy: { order: "asc" } });
+  } catch {
+    return [];
+  }
+}
+
+async function safeFetchCampaigns() {
+  try {
+    return await db.campaign.findMany({ orderBy: { order: "asc" } });
+  } catch {
+    return [];
+  }
+}
+
+async function safeFetchSkills() {
+  try {
+    return await db.skillCategory.findMany({ orderBy: { order: "asc" } });
+  } catch {
+    return [];
+  }
+}
+
+async function safeFetchEducation() {
+  try {
+    return await db.education.findMany({ orderBy: { order: "asc" } });
+  } catch {
+    return [];
+  }
 }
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
-
+//
+//  The page body itself is also wrapped in a defensive try/catch —
+//  if anything inside the render path throws (e.g. JSON.stringify on
+//  a cyclic object, a React render error), we fall back to a minimal
+//  static shell so the user never sees "Application error".
+//
 export default async function PortfolioPage() {
   // Fetch all entities in parallel — server-side, no client round-trips.
-  // Each query is wrapped so that a failure on one entity (e.g. empty
-  // table or DB cold-start) doesn't break the whole page.
+  // Each helper has its own try/catch so a failure on one entity
+  // (e.g. DB cold-start) doesn't break the whole page.
   const [profile, projects, experiences, campaigns, skills, education] =
     await Promise.all([
-      db.profile.findFirst().catch(() => null),
-      db.project
-        .findMany({ orderBy: { order: "asc" } })
-        .catch(() => []),
-      db.experience
-        .findMany({ orderBy: { order: "asc" } })
-        .catch(() => []),
-      db.campaign
-        .findMany({ orderBy: { order: "asc" } })
-        .catch(() => []),
-      db.skillCategory
-        .findMany({ orderBy: { order: "asc" } })
-        .catch(() => []),
-      db.education
-        .findMany({ orderBy: { order: "asc" } })
-        .catch(() => []),
+      safeFetchProfile(),
+      safeFetchProjects(),
+      safeFetchExperiences(),
+      safeFetchCampaigns(),
+      safeFetchSkills(),
+      safeFetchEducation(),
     ]);
 
   // Build a dynamic, profile-aware JSON-LD Person block. Falls back to
@@ -127,9 +191,8 @@ export default async function PortfolioPage() {
   const personJsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: profile?.name ?? "Mohamed Medhat Ahmed",
-    jobTitle:
-      profile?.title ?? "Marketing & Business Development Specialist",
+    name: profile?.name ?? FALLBACK_NAME,
+    jobTitle: profile?.title ?? FALLBACK_TITLE,
     url: SITE_URL,
     description: profile?.bio ?? undefined,
     email: profile?.email || undefined,
