@@ -93,10 +93,14 @@ export async function generateMetadata(): Promise<Metadata> {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  "http://localhost:3000";
+
 export default async function PortfolioPage() {
   // Fetch all entities in parallel — server-side, no client round-trips.
   // Each query is wrapped so that a failure on one entity (e.g. empty
-  // table) doesn't break the whole page.
+  // table or DB cold-start) doesn't break the whole page.
   const [profile, projects, experiences, campaigns, skills, education] =
     await Promise.all([
       db.profile.findFirst().catch(() => null),
@@ -117,14 +121,54 @@ export default async function PortfolioPage() {
         .catch(() => []),
     ]);
 
+  // Build a dynamic, profile-aware JSON-LD Person block. Falls back to
+  // sane defaults if the DB is unreachable. Rendered in the page body
+  // (HTML5 allows JSON-LD anywhere in the document).
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: profile?.name ?? "Mohamed Medhat Ahmed",
+    jobTitle:
+      profile?.title ?? "Marketing & Business Development Specialist",
+    url: SITE_URL,
+    description: profile?.bio ?? undefined,
+    email: profile?.email || undefined,
+    telephone: profile?.phone || undefined,
+    sameAs: profile?.linkedin
+      ? [`https://linkedin.com/in/${profile.linkedin}`]
+      : undefined,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Giza",
+      addressCountry: "Egypt",
+    },
+    knowsAbout: [
+      "Marketing",
+      "Business Development",
+      "Campaign Strategy",
+      "Brand Audit",
+      "Digital Marketing",
+      "FMCG",
+      "B2B",
+    ],
+  };
+
   return (
-    <PortfolioClient
-      profile={profile}
-      projects={projects}
-      experiences={experiences}
-      campaigns={campaigns}
-      skills={skills}
-      education={education}
-    />
+    <>
+      {/* Dynamic JSON-LD Person structured data — overrides the static
+          fallback in layout.tsx with profile-specific values. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+      />
+      <PortfolioClient
+        profile={profile}
+        projects={projects}
+        experiences={experiences}
+        campaigns={campaigns}
+        skills={skills}
+        education={education}
+      />
+    </>
   );
 }
