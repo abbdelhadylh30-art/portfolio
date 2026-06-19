@@ -163,3 +163,35 @@ Stage Summary:
 - Pushed to GitHub main branch
 - Vercel will auto-deploy (user may need to trigger manual redeploy if CDN doesn't pick it up)
 - The dashboard project creation flow is now production-grade
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Convert portfolio landing page from client-side rendering to SSR for SEO (fix the "Loading portfolio..." issue that made the site invisible to Google)
+
+Work Log:
+- Read full src/app/page.tsx (1266 lines) — confirmed it was 'use client' with useEffect-based data fetching
+- Read src/app/layout.tsx, src/app/projects/[slug]/page.tsx (already SSR — good pattern reference), prisma/schema.prisma, src/lib/db.ts, vercel.json, next.config.ts, public/robots.txt
+- Created src/app/PortfolioClient.tsx — extracted the entire UI (Navigation, Hero, About, Experience, Work, Skills, Education, Contact, Footer) into a 'use client' component that accepts { profile, projects, experiences, campaigns, skills, education } as props instead of fetching them. Kept the interactive state (mobile nav, IntersectionObserver scroll spy, campaign spotlight activeProject).
+- Rewrote src/app/page.tsx as a server component: async function, fetches all 6 entities in parallel via Prisma directly (no API round-trip), force-dynamic + revalidate=0 so dashboard edits are immediately visible. Added generateMetadata() that reads from the profile row in DB for dynamic title/description/OG/Twitter.
+- Updated src/app/layout.tsx: added buildPersonJsonLd() that builds a schema.org/Person JSON-LD block from the profile row and emits it in <head> as <script type="application/ld+json">. Moved the Google Fonts <link> tags from the body into <head> (was invalid HTML). Added robots directives, twitter card, metadataBase.
+- Created src/app/sitemap.ts: dynamic /sitemap.xml that lists the homepage + every /projects/[slug] page with lastModified timestamps from the DB.
+- Created src/app/robots.ts: dynamic /robots.txt that points to the sitemap (uses NEXT_PUBLIC_SITE_URL env var).
+- Deleted public/robots.txt so the dynamic robots.ts route takes effect (public/ wins otherwise).
+- Ran `npx next build` — succeeded. Route table now shows `ƒ /` (server-rendered on demand) for the homepage.
+- Started production server on port 3939 and curled the homepage:
+  * 0 occurrences of "Loading portfolio..." (was the entire body before)
+  * Full <title>, <meta description>, OG tags, Twitter card, canonical URL all present in initial HTML
+  * JSON-LD Person structured data present in <head>
+  * /robots.txt returns valid content pointing to /sitemap.xml
+  * /sitemap.xml returns valid XML
+  * Page rendered "No profile data found" message — expected on local empty DB; on Vercel with Supabase the real portfolio will render server-side
+- Committed as 8c7aa38 "Convert landing page to SSR for SEO + add JSON-LD, sitemap, dynamic robots" (7 files changed, 1549 insertions, 1271 deletions) and pushed to GitHub to trigger Vercel redeploy.
+
+Stage Summary:
+- Portfolio is now server-side rendered — Google's crawler sees the full content (bio, projects, experience, etc.) without executing JavaScript.
+- SEO infrastructure complete: dynamic metadata, JSON-LD Person structured data, dynamic sitemap.xml listing all project detail pages, dynamic robots.txt pointing to sitemap, canonical URLs, OpenGraph + Twitter cards.
+- Critical follow-up for user: set NEXT_PUBLIC_SITE_URL=https://portfolio-z258.vercel.app in Vercel project settings (Settings → Environment Variables) so the sitemap, canonical URLs, and JSON-LD url field use the production domain instead of localhost.
+- Files created: src/app/PortfolioClient.tsx, src/app/sitemap.ts, src/app/robots.ts
+- Files modified: src/app/page.tsx (rewrote as server component), src/app/layout.tsx (added JSON-LD + moved fonts to head + rich metadata), next-env.d.ts (auto-updated by Next.js build)
+- Files deleted: public/robots.txt (replaced by dynamic robots.ts)
