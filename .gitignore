@@ -18,3 +18,4 @@ upload/extracted/
 portfolio_content.json
 db/
 tsconfig.tsbuildinfo
+scripts/*.png
