@@ -195,3 +195,29 @@ Stage Summary:
 - Files created: src/app/PortfolioClient.tsx, src/app/sitemap.ts, src/app/robots.ts
 - Files modified: src/app/page.tsx (rewrote as server component), src/app/layout.tsx (added JSON-LD + moved fonts to head + rich metadata), next-env.d.ts (auto-updated by Next.js build)
 - Files deleted: public/robots.txt (replaced by dynamic robots.ts)
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Hotfix — Vercel deploy crashed with "Application error: a server-side exception has occurred" (Digest: 700109800) after the SSR refactor went live.
+
+Work Log:
+- User reported Vercel deployment at portfolio-dvkfb7n9l-abbdelhadylh30-8252s-projects.vercel.app showed the "Application error: a server-side exception has occurred" page.
+- Diagnosed the root cause: the SSR refactor (commit 8c7aa38) had added `await db.profile.findFirst()` to src/app/layout.tsx in order to build the JSON-LD Person block. The root layout wraps EVERY route (/, /dashboard, /api/*, /projects/[slug], 404s), so when the Prisma query failed — which is very likely on Vercel serverless cold starts or any env var mismatch — the entire layout threw and took down the whole site.
+- Architectural fix: removed the db import and async buildPersonJsonLd() helper from layout.tsx entirely. The layout is now a plain synchronous component with NO database calls. A static fallback JSON-LD Person block (with hardcoded default name/jobTitle/etc.) is emitted in <head> for every route.
+- Moved the dynamic, profile-aware JSON-LD into src/app/page.tsx — rendered inline in the page body (HTML5 allows JSON-LD anywhere in the document). The homepage gets the enriched version with real email/phone/linkedin from the DB; every other route still gets the static fallback. If the DB fails on the homepage, the .catch() on db.profile.findFirst() returns null and the page renders the 'No profile data found' fallback — no crash.
+- Verified locally by setting DATABASE_URL to an invalid value (file:// SQLite URL while schema expects postgresql://) to simulate DB failure:
+  * / -> 200 (renders 'No profile data found' fallback)
+  * /dashboard -> 200 (was crashing before the fix)
+  * /api/profile -> 500 (route-level try/catch handles it, doesn't take down HTML)
+  * /robots.txt -> 200
+  * /sitemap.xml -> 200
+  * Homepage still contains 2 JSON-LD blocks (static in head + dynamic in body)
+  * Dashboard renders normally
+- Committed as d42f27f "HOTFIX: Remove DB calls from root layout (was crashing every route)" (2 files changed, 84 insertions, 74 deletions) and pushed to GitHub to trigger Vercel redeploy.
+
+Stage Summary:
+- The architectural lesson: NEVER make database calls from the root layout. The root layout is a single point of failure for the entire Next.js app — any DB error there crashes every route, not just the one that needs the data.
+- The static JSON-LD fallback in the layout is intentionally minimal (hardcoded name/jobTitle/knowsAbout). The dynamic, profile-aware version with real contact info is only on the homepage where it can fail gracefully.
+- Files modified: src/app/layout.tsx (removed db import, removed async buildPersonJsonLd(), added static JSON-LD), src/app/page.tsx (added dynamic JSON-LD render in page body).
+- Pending: monitor Vercel redeploy of commit d42f27f. The site should be back online within ~1-2 minutes of the push.
