@@ -121,10 +121,17 @@ export async function generateMetadata(): Promise<Metadata> {
 //  failure, Prisma client init failure, query timeout, schema drift,
 //  anything. The page render must never throw.
 //
+//  IMPORTANT: errors are logged to console.error so they appear in
+//  Vercel → Functions → Logs. Without this, the safeFetch pattern
+//  would silently swallow errors and we'd have no idea why the page
+//  shows "No profile data found". Always log before returning the
+//  fallback.
+//
 async function safeFetchProfile() {
   try {
     return await db.profile.findFirst();
-  } catch {
+  } catch (e) {
+    console.error("[safeFetchProfile] DB error:", e);
     return null;
   }
 }
@@ -132,7 +139,8 @@ async function safeFetchProfile() {
 async function safeFetchProjects() {
   try {
     return await db.project.findMany({ orderBy: { order: "asc" } });
-  } catch {
+  } catch (e) {
+    console.error("[safeFetchProjects] DB error:", e);
     return [];
   }
 }
@@ -140,7 +148,8 @@ async function safeFetchProjects() {
 async function safeFetchExperiences() {
   try {
     return await db.experience.findMany({ orderBy: { order: "asc" } });
-  } catch {
+  } catch (e) {
+    console.error("[safeFetchExperiences] DB error:", e);
     return [];
   }
 }
@@ -148,7 +157,8 @@ async function safeFetchExperiences() {
 async function safeFetchCampaigns() {
   try {
     return await db.campaign.findMany({ orderBy: { order: "asc" } });
-  } catch {
+  } catch (e) {
+    console.error("[safeFetchCampaigns] DB error:", e);
     return [];
   }
 }
@@ -156,7 +166,8 @@ async function safeFetchCampaigns() {
 async function safeFetchSkills() {
   try {
     return await db.skillCategory.findMany({ orderBy: { order: "asc" } });
-  } catch {
+  } catch (e) {
+    console.error("[safeFetchSkills] DB error:", e);
     return [];
   }
 }
@@ -164,7 +175,8 @@ async function safeFetchSkills() {
 async function safeFetchEducation() {
   try {
     return await db.education.findMany({ orderBy: { order: "asc" } });
-  } catch {
+  } catch (e) {
+    console.error("[safeFetchEducation] DB error:", e);
     return [];
   }
 }

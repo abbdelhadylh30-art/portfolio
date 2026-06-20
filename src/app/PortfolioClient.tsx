@@ -1122,13 +1122,44 @@ export default function PortfolioClient({
   }, []);
 
   if (!profile) {
+    // This branch is hit when the server-side safeFetchProfile() returned
+    // null — either because the DB was unreachable (Supabase paused,
+    // wrong DATABASE_URL, connection pool exhaustion) or because the
+    // Profile table is genuinely empty (fresh DB that hasn't been
+    // seeded yet). The /api/health endpoint distinguishes between these.
     return (
       <div style={{
         minHeight: '100vh', background: colors.navy,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: colors.gray400, fontSize: '0.9rem',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        color: colors.gray400, fontSize: '0.95rem',
+        padding: '2rem', textAlign: 'center',
+        fontFamily: "'DM Sans', sans-serif",
       }}>
-        No profile data found. Please seed the database.
+        <div style={{
+          fontSize: '1.3rem', color: colors.white, marginBottom: '0.75rem',
+          fontFamily: "'Syne', sans-serif", fontWeight: 600,
+        }}>
+          Portfolio temporarily unavailable
+        </div>
+        <div style={{ maxWidth: '480px', lineHeight: 1.6 }}>
+          The site couldn&apos;t reach its database on this request. This is
+          usually a transient issue with the serverless database connection
+          (cold start, pool exhaustion, or a paused Supabase instance) and
+          should resolve within a minute. Please refresh the page.
+        </div>
+        <div style={{
+          marginTop: '1.5rem', fontSize: '0.8rem', opacity: 0.6,
+        }}>
+          If the problem persists, the site operator can check{' '}
+          <code style={{
+            background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.4rem',
+            borderRadius: '4px', fontFamily: 'monospace',
+          }}>
+            /api/health
+          </code>{' '}
+          for diagnostics.
+        </div>
       </div>
     );
   }
