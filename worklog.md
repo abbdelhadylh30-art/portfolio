@@ -279,3 +279,39 @@ Stage Summary:
 - Real SEO bug found and fixed: missing NEXT_PUBLIC_SITE_URL → localhost URLs in sitemap/robots/JSON-LD.
 - For cleanest URLs, user should set NEXT_PUBLIC_SITE_URL=https://portfolio-z258.vercel.app in Vercel Project Settings → Environment Variables. Otherwise the auto-generated VERCEL_URL fallback (long preview-style URL) is what gets emitted, which works but is ugly.
 - Artifacts: /home/z/my-project/download/portfolio-hero.png, /home/z/my-project/download/portfolio-fullpage.png
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Production site showing "No profile data found" — diagnose and fix.
+
+Work Log:
+- Curled https://portfolio-z258.vercel.app/api/profile → returned `{"error":"Failed to fetch profile"}`.
+- Same for /api/projects, /api/experiences — ALL API endpoints failing.
+- 5 sequential curls to homepage all returned the empty state — not intermittent, persistent failure.
+- Created /api/health endpoint that runs 3 checks: (1) env var presence + URL parse, (2) Prisma client init, (3) profile.count() query. Returns JSON with ok/detail per check, plus actionable hints.
+- Added console.error logging to all 6 safeFetch*() helpers in page.tsx so future DB errors show in Vercel logs instead of being silently swallowed.
+- Replaced the unhelpful "No profile data found. Please seed the database." empty state with a user-friendly "Portfolio temporarily unavailable" screen pointing operators at /api/health.
+- Committed beefc8c, pushed, waited for deploy.
+- Hit /api/health on production — got the smoking gun:
+
+    "env": {
+      "ok": false,
+      "detail": "DATABASE_URL is set but malformed"
+    },
+    "query": {
+      "ok": false,
+      "detail": "error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`."
+    }
+
+- ROOT CAUSE: The DATABASE_URL env var on Vercel is set, but its value does NOT start with postgresql:// or postgres://. Almost certainly the SQLite file:// URL from local .env was accidentally pasted into Vercel Project Settings → Environment Variables at some point. Prisma's schema.prisma declares `provider = "postgresql"`, so any non-postgres URL fails validation at query time.
+
+- The reason the site worked earlier today (curl at 13:30 UTC returned 9,223 chars of profile data) is unclear from here — possibly an older deployment was still serving, or the env var was changed in the last few hours. Either way, the current state is: DATABASE_URL on Vercel is malformed.
+
+Stage Summary:
+- Diagnosed: DATABASE_URL on Vercel is malformed (not a postgres:// URL).
+- Fix required (user action): Update DATABASE_URL in Vercel Project Settings → Environment Variables to the Supabase connection string. Format:
+    postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+  The pooler (port 6543) is required for Vercel serverless. The pgbouncer=true&connection_limit=1 params prevent pool exhaustion.
+- After updating the env var, user must redeploy (Vercel → Deployments → Redeploy, or push any commit) — env var changes don't apply to existing deployments automatically.
+- /api/health is now a permanent diagnostic tool at https://portfolio-z258.vercel.app/api/health
