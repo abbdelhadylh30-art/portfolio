@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 /* ------------------------------------------------------------------ */
 /*  Dynamic sitemap                                                    */
@@ -17,10 +18,6 @@ import type { MetadataRoute } from "next";
 //
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Homepage — highest priority, fresh content (dashboard edits flow here)

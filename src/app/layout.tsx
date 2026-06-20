@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { SITE_URL } from "@/lib/site-url";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,13 +18,11 @@ const geistMono = Geist_Mono({
 /*  Site URL (used for canonical URLs, sitemap, OpenGraph, JSON-LD)    */
 /* ------------------------------------------------------------------ */
 //
-//  Set NEXT_PUBLIC_SITE_URL in your Vercel project settings, e.g.
-//  https://portfolio-z258.vercel.app/
-//  Falls back to localhost for local dev.
+//  SITE_URL is resolved centrally in src/lib/site-url.ts, with the
+//  fallback chain: NEXT_PUBLIC_SITE_URL → VERCEL_URL → localhost.
+//  Set NEXT_PUBLIC_SITE_URL in your Vercel project settings to
+//  https://portfolio-z258.vercel.app for the cleanest URLs.
 //
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
 
 /* ------------------------------------------------------------------ */
 /*  Static metadata                                                    */

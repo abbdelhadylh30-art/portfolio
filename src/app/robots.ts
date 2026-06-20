@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 /* ------------------------------------------------------------------ */
 /*  Dynamic robots.txt                                                 */
@@ -8,9 +9,6 @@ import type { MetadataRoute } from "next";
 //  (rather than the static /public/robots.txt) so the Sitemap URL
 //  always matches the deployed domain, which is what Google expects.
 //
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site-url";
 import type { Metadata } from "next";
 import PortfolioClient from "./PortfolioClient";
 
@@ -28,10 +29,6 @@ export const revalidate = 0;
 //  Keeping these here means the page can ALWAYS render, even on first
 //  deploy with an empty database — it just renders the fallback UI.
 //
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
-
 const FALLBACK_NAME = "Mohamed Medhat Ahmed";
 const FALLBACK_TITLE = "Marketing & Business Development Specialist";
 const FALLBACK_BIO =
@@ -60,13 +57,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const bio = profile?.bio ?? FALLBACK_BIO;
 
   // Build metadataBase safely — bad URLs in env vars must not throw.
+  // SITE_URL is already validated in site-url.ts, so this won't throw,
+  // but we keep the try/catch as defense-in-depth.
   let metadataBase: URL | undefined;
   try {
-    if (process.env.NEXT_PUBLIC_SITE_URL) {
-      metadataBase = new URL(process.env.NEXT_PUBLIC_SITE_URL);
-    }
+    metadataBase = new URL(SITE_URL);
   } catch {
-    // Malformed NEXT_PUBLIC_SITE_URL — ignore, leave metadataBase undefined.
+    // Malformed SITE_URL — ignore, leave metadataBase undefined.
   }
 
   return {
@@ -97,11 +94,21 @@ export async function generateMetadata(): Promise<Metadata> {
       description: bio,
       type: "profile",
       siteName: `${name} Portfolio`,
+      url: SITE_URL,
+      images: [
+        {
+          url: "/images/hero-bg.jpg",
+          width: 1200,
+          height: 630,
+          alt: `${name} — ${title}`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${name} — ${title}`,
       description: bio,
+      images: ["/images/hero-bg.jpg"],
     },
   };
 }
