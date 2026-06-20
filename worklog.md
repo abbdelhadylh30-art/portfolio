@@ -250,3 +250,32 @@ Stage Summary:
 - The current page.tsx now has 7 layers of defense: 6 safeFetch*() helpers (each with try/catch), plus a try/catch around new URL() in generateMetadata, plus try/catch around the db call in generateMetadata. ANY failure at any layer falls back to static defaults and the page still returns 200.
 - Files modified: src/lib/db.ts (production log config), src/app/page.tsx (defensive helpers + metadata hardening), src/app/sitemap.ts (lazy db import).
 - Pending: monitor Vercel redeploy of commit eed53a1. The site should be back online within ~1-2 minutes of the push. If it STILL crashes after this commit, the problem is almost certainly NOT in our code — it would be a Vercel build error (e.g. Prisma client not generated, env var not set on Vercel) that we'd need to see the Vercel build logs to diagnose.
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Fix NEXT_PUBLIC_SITE_URL missing on Vercel — sitemap/robots/JSON-LD/canonical all pointed to localhost. Also take screenshot to disprove Claude's "loading shell" claim.
+
+Work Log:
+- Curled https://portfolio-z258.vercel.app/ as Googlebot.
+- HTML response was 129KB, contained 9,223 chars of visible text, 7 sections, 27 headings, 18 paragraphs, full JSON-LD Person schema with email/phone/LinkedIn. Zero "Loading" text. → SSR is working correctly; Claude's "loading shell" claim is incorrect.
+- However, discovered that NEXT_PUBLIC_SITE_URL was not set on Vercel, so every SEO surface (sitemap.xml, robots.txt, JSON-LD url, og:url, canonical) was emitting http://localhost:3000 — which Google would treat as broken/invalid.
+- Created src/lib/site-url.ts as the single source of truth for SITE_URL, with a 3-step fallback chain:
+    1. NEXT_PUBLIC_SITE_URL (explicit operator override)
+    2. VERCEL_URL (auto-injected by Vercel on every deploy, e.g. "portfolio-z258.vercel.app")
+    3. http://localhost:3000 (local dev)
+- Updated layout.tsx, page.tsx, sitemap.ts, robots.ts to import SITE_URL from this central module instead of re-declaring the fallback inline.
+- Added og:image + twitter:image meta tags pointing to /images/hero-bg.jpg (1200x630) so social shares render a preview card.
+- Verified TypeScript clean (0 errors in edited files), ran `next build` successfully.
+- Committed as b4bad55 and pushed to main.
+- Waited 75s, re-curled the live site:
+    * sitemap.xml now shows https://portfolio-z258-...vercel.app (was http://localhost:3000)
+    * robots.txt now shows correct Host and Sitemap URLs
+    * JSON-LD Person url field now shows the real https URL
+- Took desktop + full-page screenshots via agent-browser and saved to /home/z/my-project/download/.
+
+Stage Summary:
+- The site has been SSR-rendered since commit eed53a1. Claude's "loading shell" assessment is incorrect — likely cached from before the SSR refactor, or the fetch tool was confused by React Server Component payloads in <script> tags.
+- Real SEO bug found and fixed: missing NEXT_PUBLIC_SITE_URL → localhost URLs in sitemap/robots/JSON-LD.
+- For cleanest URLs, user should set NEXT_PUBLIC_SITE_URL=https://portfolio-z258.vercel.app in Vercel Project Settings → Environment Variables. Otherwise the auto-generated VERCEL_URL fallback (long preview-style URL) is what gets emitted, which works but is ugly.
+- Artifacts: /home/z/my-project/download/portfolio-hero.png, /home/z/my-project/download/portfolio-fullpage.png
