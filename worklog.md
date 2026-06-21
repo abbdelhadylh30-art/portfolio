@@ -393,3 +393,65 @@ Stage Summary:
 - Old admin123 password no longer works (intentional rotation).
 - User should still revoke the Vercel API token at https://vercel.com/account/tokens since the work is done.
 - Lessons learned: bcrypt hashes contain $ characters that bash will expand as variable references when sourcing .env files unquoted. Always read such values via Python or with single-quoted heredocs.
+
+---
+Task ID: 11
+Agent: Main Agent
+Task: Deluxe Edition v2 makeover — celebrate the post-fix relaunch with premium polish.
+
+Work Log:
+- Read PortfolioClient.tsx (1248 lines) to map structure: Navigation, Hero, About, Experience, Work, Skills, Education, Contact, Footer, Divider.
+- Added 5 new deluxe helper components/hooks before Navigation:
+    * ScrollReveal — wraps children, fades + slides in on IntersectionObserver trigger, respects prefers-reduced-motion
+    * useCountUp — animates numeric values from 0 to target with easeOutCubic, parses "2x" / "10+" / "85" suffixes
+    * AnimatedStat — stat card with count-up + gradient text fill + shimmer sweep on hover
+    * DeluxeBadge — small "Deluxe Edition · v2" pill with Sparkles icon for the footer
+    * FilmGrainOverlay — 4% opacity fractal noise SVG, mix-blend-mode overlay, pure CSS
+- Hero section rewrites:
+    * Ambient radial gold glow blurred behind hero
+    * Name has 5-color gold gradient with 6s shimmer animation loop
+    * All hero elements fade-up in 0.1s → 1.1s stagger sequence
+    * Primary CTA: gradient gold bg, soft drop shadow, shine sweep on hover
+    * 4 stat cards replaced with AnimatedStat — count up from 0 when scrolled into view
+    * Stat numbers: vertical white→gold gradient text fill via background-clip
+    * Quote card has 8s shine sweep across it
+- Main page render:
+    * Wrapped About, Experience, Work, Skills, Education, Contact in ScrollReveal
+    * Added FilmGrainOverlay at top level
+    * Z-index layering so content sits above grain but below nav
+- Divider upgraded: was flat line → now gold gradient line + rotated 45deg diamond with 8px gold glow
+- Footer upgraded:
+    * Added DeluxeBadge under copyright
+    * Soft gold gradient line across top of footer
+    * Back-to-top button has gold border + glow
+- Global <style> block expanded with 4 new keyframes (deluxe-fade-up, deluxe-gold-shimmer, deluxe-sweep, deluxe-reveal-in) + deluxe CSS classes for stat/CTA/card hover states
+- All animations respect prefers-reduced-motion (disables animation duration to 0.01ms)
+- TypeScript check: 0 errors in PortfolioClient.tsx
+- next build: clean, 12 routes generated
+- Committed 6f092fc, pushed. GitHub auto-deploy picked it up immediately — no manual redeploy needed.
+- Verified live:
+    * Page size 142KB (was 132KB — extra 10KB is the deluxe CSS/JS)
+    * Gold shimmer keyframe: 2 occurrences (hero name + style def)
+    * deluxe-fade-up animation: 3 occurrences
+    * Film grain (fractalNoise): present
+    * Deluxe Edition badge: present
+    * Diamond divider: present
+    * Profile data + projects still intact (no content regression)
+- Took 4 screenshots:
+    * /home/z/my-project/download/deluxe-hero.png (above the fold)
+    * /home/z/my-project/download/deluxe-about.png (about section)
+    * /home/z/my-project/download/deluxe-work.png (work section)
+    * /home/z/my-project/download/deluxe-fullpage.png (full page)
+
+Stage Summary:
+- Portfolio visually upgraded to "Deluxe Edition v2" with:
+    * Animated gold shimmer on the hero name
+    * Count-up stat animations
+    * Scroll-triggered fade-ins on every major section
+    * Premium hover states (gold glow, elevation, shimmer sweeps)
+    * Luxe dividers with center diamond
+    * Subtle film grain overlay for depth
+    * Deluxe Edition badge in footer
+- All animations accessibility-safe (prefers-reduced-motion respected).
+- No content changes, no new dependencies, no DB schema changes.
+- Pure presentation upgrade — celebrates the relaunch after the DB/auth/SSR fixes.
