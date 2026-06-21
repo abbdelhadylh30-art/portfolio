@@ -315,3 +315,34 @@ Stage Summary:
   The pooler (port 6543) is required for Vercel serverless. The pgbouncer=true&connection_limit=1 params prevent pool exhaustion.
 - After updating the env var, user must redeploy (Vercel → Deployments → Redeploy, or push any commit) — env var changes don't apply to existing deployments automatically.
 - /api/health is now a permanent diagnostic tool at https://portfolio-z258.vercel.app/api/health
+
+---
+Task ID: 9
+Agent: Main Agent
+Task: Refactor admin auth to use bcrypt-hashed env vars instead of plaintext DB password.
+
+Work Log:
+- Read existing auth flow: /api/auth/route.ts did db.adminUser.findUnique() and compared plaintext password. Password 'admin123' was hardcoded in prisma/seed.ts and pre-filled in the dashboard login form HTML.
+- Installed bcryptjs + @types/bcryptjs.
+- Rewrote /api/auth/route.ts to verify against env vars:
+    ADMIN_USERNAME (default 'admin')
+    ADMIN_PASSWORD_HASH (bcrypt hash)
+  No DB query needed — login works even when DB is unreachable.
+- Added timing-safe failure path: even on username mismatch, we run bcrypt.compare to prevent timing-based user enumeration.
+- Generated verified bcrypt hash for 'admin123' via node -e and used it as FALLBACK_PASSWORD_HASH in the route. This means admin/admin123 still works during the transition until the user sets ADMIN_PASSWORD_HASH.
+- Created scripts/generate-password-hash.ts — interactive CLI that prompts for password + confirmation, enforces min 8 chars, prints the hash, and walks the operator through setting it on Vercel.
+- Removed AdminUser seeding from prisma/seed.ts (table still exists in schema for backward compat but is no longer queried).
+- Removed the pre-filled password from src/app/dashboard/page.tsx — was leaking 'admin123' in the rendered HTML on every /dashboard load.
+- Updated .env.example with ADMIN_USERNAME, ADMIN_PASSWORD_HASH, and detailed notes about the Supabase pooler URL format (port 6543, pgbouncer=true, connection_limit=1).
+- Verified TypeScript clean (0 errors in edited files), ran `next build` successfully, tested the hash generator script.
+- Committed 3edca18 and pushed.
+- Verified on production after 90s wait:
+    POST /api/auth with {admin, admin123} → 200 with valid JWT token ✓
+    POST /api/auth with {admin, wrong}    → 401 Invalid credentials ✓
+  Login now works on production even though DATABASE_URL is still malformed — auth is fully env-var based.
+
+Stage Summary:
+- Auth is now independent of the database. The user can log in to the dashboard at /dashboard with admin/admin123 immediately, even before fixing the DATABASE_URL env var.
+- Once the user fixes DATABASE_URL, the dashboard's content management features (CRUD on profile/projects/experiences/etc.) will also work.
+- To rotate the password: run `npx tsx scripts/generate-password-hash.ts`, paste the hash as ADMIN_PASSWORD_HASH in Vercel → Redeploy.
+- Pending user actions: (1) fix DATABASE_URL on Vercel, (2) optionally set ADMIN_PASSWORD_HASH to a strong custom password.
