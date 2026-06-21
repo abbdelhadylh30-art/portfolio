@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import {
   Mail,
@@ -197,6 +197,234 @@ function getProjectImage(project: ProjectData): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Deluxe Edition — premium enhancements                              */
+/* ------------------------------------------------------------------ */
+//
+//  ScrollReveal: wraps children in a div that starts at opacity 0 + 24px
+//  below its final position, then fades + slides in when scrolled into
+//  view (IntersectionObserver). Falls back to visible if JS disabled
+//  or IntersectionObserver unavailable — content still renders, just
+//  without the animation. Respects prefers-reduced-motion.
+//
+function ScrollReveal({
+  children,
+  delay = 0,
+  as: Tag = 'div',
+  style,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  as?: React.ElementType;
+  style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    // Respect prefers-reduced-motion — skip animation entirely.
+    if (typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setVisible(true);
+      return;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            obs.disconnect();
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <Tag
+      ref={ref as React.Ref<HTMLElement>}
+      className={visible ? 'deluxe-reveal deluxe-reveal--in' : 'deluxe-reveal'}
+      style={{ ...style, transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+//
+//  useCountUp: animates a number from 0 to target when `active` becomes
+//  true. Used for the hero stat cards. Parses values like "2x", "10+",
+//  "3+", "C1" — non-numeric values just render as-is (no animation).
+//
+function useCountUp(rawValue: string, active: boolean, duration = 1200) {
+  // Try to extract a leading number from values like "2x", "10+", "85"
+  const match = rawValue.match(/^(\d+(?:\.\d+)?)(.*)$/);
+  const numericPart = match ? parseFloat(match[1]) : null;
+  const suffix = match ? match[2] : '';
+  const [display, setDisplay] = useState(
+    numericPart !== null ? `0${suffix}` : rawValue
+  );
+
+  useEffect(() => {
+    if (numericPart === null) {
+      setDisplay(rawValue);
+      return;
+    }
+    if (!active) return;
+
+    // Respect reduced motion — skip straight to final value.
+    if (typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplay(`${numericPart}${suffix}`);
+      return;
+    }
+
+    let raf: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutCubic for a premium decelerating feel
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = numericPart * eased;
+      const formatted = Number.isInteger(numericPart)
+        ? Math.round(current).toString()
+        : current.toFixed(1);
+      setDisplay(`${formatted}${suffix}`);
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, rawValue, duration]);
+
+  return display;
+}
+
+//
+//  AnimatedStat: stat card with count-up animation triggered on scroll.
+//
+function AnimatedStat({
+  value, label, sub, delay = 0,
+}: {
+  value: string; label: string; sub: string; delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [active, setActive] = useState(false);
+  const displayValue = useCountUp(value, active);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setActive(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setActive(true);
+            obs.disconnect();
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="stat-card-hover deluxe-stat-card"
+      style={{
+        background: 'linear-gradient(160deg, rgba(15,29,53,0.95), rgba(17,29,51,0.85))',
+        border: '1px solid rgba(200,150,62,0.14)',
+        borderRadius: 14, padding: '1.35rem 1.5rem',
+        transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+        position: 'relative', overflow: 'hidden',
+        animation: `deluxe-fade-up 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+      }}
+    >
+      {/* Subtle gold shimmer sweep on hover */}
+      <div className="deluxe-shimmer-sweep" style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(120deg, transparent 30%, rgba(200,150,62,0.08) 50%, transparent 70%)',
+        opacity: 0, transition: 'opacity 0.4s', pointerEvents: 'none',
+      }} />
+      <div style={{
+        fontFamily: "'Syne', sans-serif",
+        fontSize: 'clamp(1.5rem, 3vw, 2.1rem)', fontWeight: 800,
+        color: colors.white, letterSpacing: '-0.04em',
+        background: 'linear-gradient(180deg, #fff 0%, #e8b85a 140%)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+      }}>
+        {displayValue}
+      </div>
+      <div style={{ fontSize: '0.8rem', color: colors.gray400, marginTop: '0.25rem' }}>
+        {label}
+      </div>
+      <div style={{ fontSize: '0.72rem', color: colors.gray600, marginTop: '0.15rem' }}>
+        {sub}
+      </div>
+    </div>
+  );
+}
+
+//
+//  DeluxeBadge: small "Deluxe Edition" mark for the footer.
+//
+function DeluxeBadge() {
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+      fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.16em',
+      textTransform: 'uppercase',
+      color: colors.gold,
+      padding: '0.3rem 0.7rem',
+      border: '1px solid rgba(200,150,62,0.3)',
+      borderRadius: '999px',
+      background: 'rgba(200,150,62,0.06)',
+    }}>
+      <Sparkles size={11} />
+      Deluxe Edition · v2
+    </div>
+  );
+}
+
+//
+//  FilmGrainOverlay: very subtle film grain texture for premium depth.
+//  Pure CSS — no image asset needed. Pointer-events:none so it never
+//  blocks clicks. z-index high but below nav.
+//
+function FilmGrainOverlay() {
+  return (
+    <div aria-hidden style={{
+      position: 'fixed', inset: 0, zIndex: 1,
+      pointerEvents: 'none',
+      opacity: 0.04,
+      backgroundImage:
+        'url("data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E")',
+      mixBlendMode: 'overlay',
+    }} />
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Navigation                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -314,15 +542,25 @@ function HeroSection({ profile }: { profile: ProfileData }) {
       maxWidth: 1080,
       margin: '0 auto',
       padding: '8rem 2.5rem 4rem',
+      position: 'relative',
     }}>
+      {/* Deluxe ambient gold glow behind hero — subtle radial gradient */}
+      <div aria-hidden style={{
+        position: 'absolute', top: '20%', right: '-10%',
+        width: '60vw', height: '60vw', maxWidth: 700, maxHeight: 700,
+        background: 'radial-gradient(circle, rgba(200,150,62,0.08) 0%, transparent 60%)',
+        filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0,
+      }} />
+
       {/* Left */}
-      <div>
+      <div style={{ position: 'relative', zIndex: 2 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
           background: 'rgba(200,150,62,0.12)', color: colors.gold,
           fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em',
           padding: '0.35rem 0.9rem', borderRadius: '999px',
           textTransform: 'uppercase', marginBottom: '1.75rem',
+          animation: 'deluxe-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
         }}>
           <span style={{
             width: 6, height: 6, background: colors.gold, borderRadius: '50%',
@@ -331,38 +569,64 @@ function HeroSection({ profile }: { profile: ProfileData }) {
           Open to opportunities
         </div>
 
-        <h1 style={{
+        <h1 className="deluxe-hero-name" style={{
           fontFamily: "'Syne', sans-serif",
-          fontSize: 'clamp(2.4rem, 5vw, 4.2rem)',
+          fontSize: 'clamp(2.4rem, 5vw, 4.4rem)',
           fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.04em',
           color: colors.white, marginBottom: '1.5rem',
+          animation: 'deluxe-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both',
         }}>
           {firstName}<br />
-          {lastName ? <><span style={{ color: colors.gold }}>{lastName}</span>.</> : null}
+          {lastName ? (
+            <>
+              <span style={{
+                background: 'linear-gradient(120deg, #c8963e 0%, #e8b85a 40%, #fff1d6 50%, #e8b85a 60%, #c8963e 100%)',
+                backgroundSize: '200% 100%',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                animation: 'deluxe-gold-shimmer 6s ease-in-out infinite',
+              }}>{lastName}</span>.
+            </>
+          ) : null}
         </h1>
 
         <p style={{
           fontSize: '1.05rem', color: colors.gray400, fontWeight: 300,
           maxWidth: 480, marginBottom: '2.5rem', lineHeight: 1.75,
+          animation: 'deluxe-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) 0.25s both',
         }}>
           {profile.bio ? profile.bio.split('.').slice(0, 2).join('.') + '.' : profile.heroSubtitle}
         </p>
 
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} style={{
-            background: colors.gold, color: colors.navy,
+        <div style={{
+          display: 'flex', gap: '1rem', flexWrap: 'wrap',
+          animation: 'deluxe-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) 0.4s both',
+        }}>
+          <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="deluxe-cta-primary" style={{
+            background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldLight})`,
+            color: colors.navy,
             fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600,
             padding: '0.85rem 2rem', borderRadius: '999px',
-            border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+            border: 'none', cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
             display: 'flex', alignItems: 'center', gap: '0.5rem',
+            position: 'relative', overflow: 'hidden',
+            boxShadow: '0 4px 24px -6px rgba(200,150,62,0.4)',
           }}>
-            View my work <ArrowRight size={16} />
+            <span className="deluxe-cta-shine" style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
+              transform: 'translateX(-100%)', transition: 'transform 0.6s',
+            }} />
+            <span style={{ position: 'relative', zIndex: 1 }}>View my work</span>
+            <ArrowRight size={16} style={{ position: 'relative', zIndex: 1 }} />
           </button>
           <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} style={{
             background: 'transparent', color: colors.white,
             fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 500,
             padding: '0.85rem 2rem', borderRadius: '999px',
-            border: '1.5px solid rgba(200,150,62,0.3)', cursor: 'pointer', transition: 'all 0.2s',
+            border: '1.5px solid rgba(200,150,62,0.3)', cursor: 'pointer',
+            transition: 'all 0.3s',
           }}>
             Get in touch
           </button>
@@ -370,47 +634,53 @@ function HeroSection({ profile }: { profile: ProfileData }) {
       </div>
 
       {/* Right */}
-      <div className="hero-stats" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="hero-stats" style={{
+        display: 'flex', flexDirection: 'column', gap: '1.5rem',
+        position: 'relative', zIndex: 2,
+        animation: 'deluxe-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.5s both',
+      }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          {[
-            { value: profile.stat1Value, label: profile.stat1Label, sub: profile.stat1Sub },
-            { value: profile.stat2Value, label: profile.stat2Label, sub: profile.stat2Sub },
-            { value: profile.stat3Value, label: profile.stat3Label, sub: profile.stat3Sub },
-            { value: profile.stat4Value, label: profile.stat4Label, sub: profile.stat4Sub },
-          ].map((stat, i) => (
-            <div key={i} style={{
-              background: colors.navyLight,
-              border: '1px solid rgba(200,150,62,0.12)',
-              borderRadius: 12, padding: '1.25rem 1.5rem',
-              transition: 'all 0.25s',
-            }} className="stat-card-hover">
-              <div style={{
-                fontFamily: "'Syne', sans-serif",
-                fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 800, color: colors.white, letterSpacing: '-0.04em',
-              }}>
-                {stat.value}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: colors.gray400, marginTop: '0.2rem' }}>
-                {stat.label}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: colors.gray600, marginTop: '0.15rem' }}>
-                {stat.sub}
-              </div>
-            </div>
-          ))}
+          <AnimatedStat
+            value={profile.stat1Value} label={profile.stat1Label} sub={profile.stat1Sub}
+            delay={600}
+          />
+          <AnimatedStat
+            value={profile.stat2Value} label={profile.stat2Label} sub={profile.stat2Sub}
+            delay={720}
+          />
+          <AnimatedStat
+            value={profile.stat3Value} label={profile.stat3Label} sub={profile.stat3Sub}
+            delay={840}
+          />
+          <AnimatedStat
+            value={profile.stat4Value} label={profile.stat4Label} sub={profile.stat4Sub}
+            delay={960}
+          />
         </div>
 
         <div style={{
           background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldLight})`,
           borderRadius: 12, padding: '1.5rem',
           color: colors.navy,
+          position: 'relative', overflow: 'hidden',
+          animation: 'deluxe-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 1.1s both',
         }}>
-          <p style={{ fontSize: '0.92rem', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 400 }}>
+          {/* Subtle shine sweep across the quote card */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)',
+            animation: 'deluxe-sweep 8s ease-in-out infinite',
+          }} />
+          <p style={{
+            fontSize: '0.92rem', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 400,
+            position: 'relative', zIndex: 1,
+          }}>
             &ldquo;{profile.quote}&rdquo;
           </p>
           <cite style={{
             display: 'block', marginTop: '0.75rem', fontStyle: 'normal',
             fontSize: '0.78rem', opacity: 0.7,
+            position: 'relative', zIndex: 1,
           }}>
             — {profile.name}
           </cite>
@@ -1036,21 +1306,33 @@ function ContactSection({ profile }: { profile: ProfileData }) {
 function Footer({ profile }: { profile: ProfileData }) {
   return (
     <footer style={{
-      borderTop: '1px solid rgba(200,150,62,0.1)',
-      padding: '2rem 2.5rem',
+      borderTop: '1px solid rgba(200,150,62,0.12)',
+      padding: '2.5rem 2.5rem',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       maxWidth: 1080, margin: '0 auto',
-      flexWrap: 'wrap', gap: '1rem',
+      flexWrap: 'wrap', gap: '1.25rem',
+      position: 'relative',
     }}>
-      <p style={{ fontSize: '0.8rem', color: colors.gray600 }}>
-        &copy; 2025 {profile.name} · Giza, Egypt
-      </p>
+      {/* Soft gold glow above footer for a premium closing feel */}
+      <div aria-hidden style={{
+        position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '80%', height: 1,
+        background: 'linear-gradient(90deg, transparent, rgba(200,150,62,0.5), transparent)',
+      }} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <p style={{ fontSize: '0.8rem', color: colors.gray600, margin: 0 }}>
+          &copy; 2025 {profile.name} · Giza, Egypt
+        </p>
+        <DeluxeBadge />
+      </div>
       <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{
-        background: 'rgba(200,150,62,0.1)', border: 'none', borderRadius: '999px',
-        padding: '0.4rem 1rem', fontSize: '0.78rem', color: colors.gold,
+        background: 'rgba(200,150,62,0.1)', border: '1px solid rgba(200,150,62,0.2)', borderRadius: '999px',
+        padding: '0.5rem 1.1rem', fontSize: '0.78rem', color: colors.gold,
         cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
+        transition: 'all 0.25s', display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
       }}>
-        <ChevronDown size={14} style={{ transform: 'rotate(180deg)', verticalAlign: 'middle', marginRight: 4 }} />
+        <ChevronDown size={14} style={{ transform: 'rotate(180deg)' }} />
         Back to top
       </button>
     </footer>
@@ -1058,17 +1340,27 @@ function Footer({ profile }: { profile: ProfileData }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Divider                                                            */
+/*  Divider — luxe gold gradient with center diamond                   */
 /* ------------------------------------------------------------------ */
 
 function Divider() {
   return (
     <div style={{
       maxWidth: 1080, margin: '0 auto', padding: '0 2.5rem',
+      display: 'flex', alignItems: 'center', gap: '0.75rem',
     }}>
       <div style={{
-        height: 1,
-        background: 'linear-gradient(90deg, transparent, rgba(200,150,62,0.2), transparent)',
+        flex: 1, height: 1,
+        background: 'linear-gradient(90deg, transparent, rgba(200,150,62,0.25))',
+      }} />
+      <div style={{
+        width: 6, height: 6, transform: 'rotate(45deg)',
+        background: colors.gold,
+        boxShadow: '0 0 8px rgba(200,150,62,0.6)',
+      }} />
+      <div style={{
+        flex: 1, height: 1,
+        background: 'linear-gradient(90deg, rgba(200,150,62,0.25), transparent)',
       }} />
     </div>
   );
@@ -1171,31 +1463,99 @@ export default function PortfolioClient({
       color: colors.white,
       fontFamily: "'DM Sans', sans-serif",
       WebkitFontSmoothing: 'antialiased',
+      position: 'relative',
     }}>
-      <Navigation activeSection={activeSection} />
-      <HeroSection profile={profile} />
-      <Divider />
-      <AboutSection profile={profile} />
-      <Divider />
-      <ExperienceSection experiences={experiences} />
-      <Divider />
-      <WorkSection projects={projects} campaigns={campaigns} />
-      <Divider />
-      <SkillsSection skills={skills} />
-      <Divider />
-      <EducationSection education={education} />
-      <Divider />
-      <ContactSection profile={profile} />
-      <Footer profile={profile} />
+      <FilmGrainOverlay />
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <Navigation activeSection={activeSection} />
+        <HeroSection profile={profile} />
+        <Divider />
+        <ScrollReveal><AboutSection profile={profile} /></ScrollReveal>
+        <Divider />
+        <ScrollReveal><ExperienceSection experiences={experiences} /></ScrollReveal>
+        <Divider />
+        <ScrollReveal><WorkSection projects={projects} campaigns={campaigns} /></ScrollReveal>
+        <Divider />
+        <ScrollReveal><SkillsSection skills={skills} /></ScrollReveal>
+        <Divider />
+        <ScrollReveal><EducationSection education={education} /></ScrollReveal>
+        <Divider />
+        <ScrollReveal><ContactSection profile={profile} /></ScrollReveal>
+        <Footer profile={profile} />
+      </div>
 
-      {/* Global responsive styles */}
+      {/* Global responsive styles + Deluxe Edition animations */}
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+
+        /* ---- Deluxe Edition keyframes ---- */
+        @keyframes deluxe-fade-up {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes deluxe-gold-shimmer {
+          0%, 100% { background-position: 200% 0; }
+          50%      { background-position: -200% 0; }
+        }
+        @keyframes deluxe-sweep {
+          0%, 100% { transform: translateX(-100%); opacity: 0; }
+          50%      { transform: translateX(100%); opacity: 1; }
+        }
+        @keyframes deluxe-reveal-in {
+          from { opacity: 0; transform: translateY(28px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- ScrollReveal ---- */
+        .deluxe-reveal {
+          opacity: 0;
+          transform: translateY(28px);
+          transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+                      transform 0.8s cubic-bezier(0.16,1,0.3,1);
+          will-change: opacity, transform;
+        }
+        .deluxe-reveal--in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* ---- Stat card shimmer on hover ---- */
+        .deluxe-stat-card:hover {
+          border-color: rgba(200,150,62,0.4) !important;
+          transform: translateY(-3px);
+          box-shadow: 0 12px 32px -8px rgba(200,150,62,0.15);
+        }
+        .deluxe-stat-card:hover .deluxe-shimmer-sweep {
+          opacity: 1;
+        }
+
+        /* ---- CTA primary button shine on hover ---- */
+        .deluxe-cta-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 32px -6px rgba(200,150,62,0.55) !important;
+        }
+        .deluxe-cta-primary:hover .deluxe-cta-shine {
+          transform: translateX(100%);
+        }
+
+        /* ---- Existing hover states (kept) ---- */
         .stat-card-hover:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-2px); }
         .principle-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-2px); }
-        .project-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-3px); }
-        .project-card:hover img { transform: scale(1.05); }
-        .contact-card:hover { border-color: rgba(200,150,62,0.35) !important; transform: translateY(-2px); }
+        .project-card { transition: all 0.35s cubic-bezier(0.16,1,0.3,1); }
+        .project-card:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-4px); box-shadow: 0 16px 40px -12px rgba(200,150,62,0.15); }
+        .project-card:hover img { transform: scale(1.08); }
+        .contact-card { transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        .contact-card:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-3px); box-shadow: 0 12px 32px -8px rgba(200,150,62,0.12); }
+
+        /* ---- Reduced motion: disable all deluxe animations ---- */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+          .deluxe-reveal { opacity: 1 !important; transform: none !important; }
+        }
 
         /* Mobile responsive */
         @media (max-width: 768px) {
