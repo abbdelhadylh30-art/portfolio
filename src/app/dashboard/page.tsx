@@ -329,7 +329,7 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState('profile');
   const [loginError, setLoginError] = useState('');
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {

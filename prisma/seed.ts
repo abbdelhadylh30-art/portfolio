@@ -404,18 +404,25 @@ Maintained organised documentation and file systems, contributing to measurable 
     });
   }
 
-  // Create default admin user
-  await prisma.adminUser.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
-      id: 'admin-1',
-      username: 'admin',
-      password: 'admin123',
-    },
-  });
+  // Auth note: AdminUser seeding has been removed.
+  //
+  // The dashboard auth flow now reads credentials from environment
+  // variables (ADMIN_USERNAME + ADMIN_PASSWORD_HASH) instead of the
+  // database — see src/app/api/auth/route.ts. This is more secure
+  // (no plaintext password in the DB) AND more reliable (login works
+  // even when the DB is unreachable).
+  //
+  // The AdminUser table still exists in schema.prisma for backward
+  // compatibility, but is no longer seeded or queried. To set your
+  // admin password:
+  //   1. Run: npx tsx scripts/generate-password-hash.ts
+  //   2. Set ADMIN_PASSWORD_HASH env var in Vercel (and .env locally)
+  //   3. Optionally set ADMIN_USERNAME (defaults to "admin")
+  //   4. Redeploy
 
   console.log('✅ Database seeded successfully!');
+  console.log('   Note: Admin credentials are now managed via env vars.');
+  console.log('   Run: npx tsx scripts/generate-password-hash.ts to set a new password.');
 }
 
 main()
