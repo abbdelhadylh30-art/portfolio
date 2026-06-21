@@ -7,6 +7,7 @@ import {
   Phone,
   Linkedin,
   ArrowRight,
+  ArrowUpRight,
   Menu,
   X,
   Award,
@@ -25,6 +26,7 @@ import {
   ExternalLink,
   Zap,
   LayoutGrid,
+  Quote,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -110,36 +112,64 @@ interface EducationData {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Colors — Navy & White Professional                                 */
+/*  Champagne Noir — Editorial Deluxe palette                          */
 /* ------------------------------------------------------------------ */
+//
+//  Warm, layered darks instead of cold blue. Champagne gold + bronze
+//  instead of saturated yellow-gold. Pearl/silk/cashmere text tiers
+//  for editorial depth. Inspired by luxury fashion editorial layouts
+//  (Vogue, Harper's Bazaar, Aman Resorts brand).
+//
+const palette = {
+  // Layered obsidian backgrounds (deepest → elevated)
+  onyx: '#08080c',
+  onyxLight: '#0f0e14',
+  charcoal: '#16151c',
+  graphite: '#1c1a24',
+  graphiteHi: '#252330',
 
-const colors = {
-  navy: '#0a1628',
-  navyLight: '#0f1d35',
-  navyMid: '#162d50',
-  navyCard: '#111d33',
-  gold: '#c8963e',
-  goldLight: '#e8b85a',
-  white: '#ffffff',
-  offWhite: '#f4f6f9',
-  gray50: '#f8f9fb',
-  gray100: '#eef1f6',
-  gray200: '#d8dde6',
-  gray400: '#8b95a8',
-  gray600: '#5a6478',
-  gray800: '#2d3748',
+  // Warm text tiers (brightest → most muted)
+  pearl: '#faf8f4',
+  silk: '#e8e4dc',
+  chiffon: '#b8b3a8',
+  cashmere: '#8a8278',
+  stone: '#5a5347',
+
+  // Champagne / copper / bronze accents
+  champagne: '#d4af7a',
+  champagneHi: '#e6c79f',
+  champagneGlow: '#f4dcb5',
+  copper: '#b87333',
+  bronze: '#8a6e4b',
+  bronzeDark: '#5a4730',
+
+  // Hairlines / surfaces
+  hairline: 'rgba(212, 175, 122, 0.14)',
+  hairlineHi: 'rgba(212, 175, 122, 0.28)',
+  hairlineSoft: 'rgba(212, 175, 122, 0.08)',
+  glass: 'rgba(28, 26, 36, 0.72)',
 };
 
 /* ------------------------------------------------------------------ */
-/*  Skill Icons — Lucide React Components instead of emojis            */
+/*  Font stacks                                                        */
+/* ------------------------------------------------------------------ */
+
+const fonts = {
+  serif: "'Fraunces', Georgia, 'Times New Roman', serif",
+  sans: "'DM Sans', system-ui, -apple-system, sans-serif",
+  mono: "'JetBrains Mono', 'SF Mono', Menlo, monospace",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Skill Icons — Lucide React Components                              */
 /* ------------------------------------------------------------------ */
 
 const skillIconMap: Record<string, React.ReactNode> = {
-  'Marketing & Campaigns': <Megaphone size={20} />,
-  'Digital & Paid Media': <TrendingUp size={20} />,
-  'Business Development': <Handshake size={20} />,
-  'Analytics & Tools': <Settings size={20} />,
-  'Languages & Tools': <Globe size={20} />,
+  'Marketing & Campaigns': <Megaphone size={18} strokeWidth={1.5} />,
+  'Digital & Paid Media': <TrendingUp size={18} strokeWidth={1.5} />,
+  'Business Development': <Handshake size={18} strokeWidth={1.5} />,
+  'Analytics & Tools': <Settings size={18} strokeWidth={1.5} />,
+  'Languages & Tools': <Globe size={18} strokeWidth={1.5} />,
 };
 
 const skillBarWidths: Record<string, Record<string, number>> = {
@@ -200,11 +230,10 @@ function getProjectImage(project: ProjectData): string {
 /*  Deluxe Edition — premium enhancements                              */
 /* ------------------------------------------------------------------ */
 //
-//  ScrollReveal: wraps children in a div that starts at opacity 0 + 24px
+//  ScrollReveal: wraps children in a div that starts at opacity 0 + 28px
 //  below its final position, then fades + slides in when scrolled into
 //  view (IntersectionObserver). Falls back to visible if JS disabled
-//  or IntersectionObserver unavailable — content still renders, just
-//  without the animation. Respects prefers-reduced-motion.
+//  or IntersectionObserver unavailable. Respects prefers-reduced-motion.
 //
 function ScrollReveal({
   children,
@@ -224,7 +253,6 @@ function ScrollReveal({
     const node = ref.current;
     if (!node) return;
 
-    // Respect prefers-reduced-motion — skip animation entirely.
     if (typeof window !== 'undefined' &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setVisible(true);
@@ -254,7 +282,7 @@ function ScrollReveal({
   return (
     <Tag
       ref={ref as React.Ref<HTMLElement>}
-      className={visible ? 'deluxe-reveal deluxe-reveal--in' : 'deluxe-reveal'}
+      className={visible ? 'noir-reveal noir-reveal--in' : 'noir-reveal'}
       style={{ ...style, transitionDelay: `${delay}ms` }}
     >
       {children}
@@ -267,8 +295,7 @@ function ScrollReveal({
 //  true. Used for the hero stat cards. Parses values like "2x", "10+",
 //  "3+", "C1" — non-numeric values just render as-is (no animation).
 //
-function useCountUp(rawValue: string, active: boolean, duration = 1200) {
-  // Try to extract a leading number from values like "2x", "10+", "85"
+function useCountUp(rawValue: string, active: boolean, duration = 1400) {
   const match = rawValue.match(/^(\d+(?:\.\d+)?)(.*)$/);
   const numericPart = match ? parseFloat(match[1]) : null;
   const suffix = match ? match[2] : '';
@@ -283,7 +310,6 @@ function useCountUp(rawValue: string, active: boolean, duration = 1200) {
     }
     if (!active) return;
 
-    // Respect reduced motion — skip straight to final value.
     if (typeof window !== 'undefined' &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setDisplay(`${numericPart}${suffix}`);
@@ -295,7 +321,6 @@ function useCountUp(rawValue: string, active: boolean, duration = 1200) {
     const tick = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      // easeOutCubic for a premium decelerating feel
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = numericPart * eased;
       const formatted = Number.isInteger(numericPart)
@@ -313,12 +338,106 @@ function useCountUp(rawValue: string, active: boolean, duration = 1200) {
 }
 
 //
+//  Eyebrow — the small mono uppercase label that sits above each
+//  section heading. Editorial newspaper-style: number + label + rule.
+//
+function Eyebrow({ index, label }: { index: string; label: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '0.85rem',
+      marginBottom: '1.5rem',
+      animation: 'noir-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
+    }}>
+      <span style={{
+        fontFamily: fonts.mono,
+        fontSize: '0.7rem', fontWeight: 500,
+        color: palette.champagne,
+        letterSpacing: '0.18em',
+      }}>
+        {index}
+      </span>
+      <span style={{
+        width: 28, height: 1,
+        background: `linear-gradient(90deg, ${palette.champagne}, transparent)`,
+      }} />
+      <span style={{
+        fontFamily: fonts.mono,
+        fontSize: '0.7rem', fontWeight: 500,
+        color: palette.chiffon,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+      }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+//
+//  SectionHeading — large editorial serif heading. Optional italic
+//  accent for a more magazine-like feel.
+//
+function SectionHeading({
+  children, italic, sub,
+}: {
+  children: React.ReactNode;
+  italic?: string;
+  sub?: string;
+}) {
+  return (
+    <>
+      <h2 style={{
+        fontFamily: fonts.serif,
+        fontWeight: 400,
+        fontSize: 'clamp(2rem, 5vw, 3.2rem)',
+        lineHeight: 1.05,
+        letterSpacing: '-0.025em',
+        color: palette.pearl,
+        marginBottom: sub ? '1rem' : '2.5rem',
+        fontVariationSettings: '"opsz" 144',
+      }}>
+        {children}
+        {italic && (
+          <em style={{
+            fontStyle: 'italic',
+            fontWeight: 300,
+            color: palette.champagne,
+            background: `linear-gradient(120deg, ${palette.champagne} 0%, ${palette.champagneHi} 50%, ${palette.champagne} 100%)`,
+            backgroundSize: '200% 100%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            animation: 'noir-shimmer 8s ease-in-out infinite',
+            marginLeft: '0.25em',
+          }}>
+            {italic}
+          </em>
+        )}
+      </h2>
+      {sub && (
+        <p style={{
+          fontSize: '0.95rem',
+          color: palette.chiffon,
+          marginBottom: '3rem',
+          maxWidth: 620,
+          lineHeight: 1.7,
+          fontWeight: 300,
+        }}>
+          {sub}
+        </p>
+      )}
+    </>
+  );
+}
+
+//
 //  AnimatedStat: stat card with count-up animation triggered on scroll.
+//  Refined for editorial luxe: serif numerals, mono label, hairline.
 //
 function AnimatedStat({
-  value, label, sub, delay = 0,
+  value, label, sub, delay = 0, index,
 }: {
-  value: string; label: string; sub: string; delay?: number;
+  value: string; label: string; sub: string; delay?: number; index: string;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(false);
@@ -349,77 +468,143 @@ function AnimatedStat({
   return (
     <div
       ref={ref}
-      className="stat-card-hover deluxe-stat-card"
+      className="noir-stat-card"
       style={{
-        background: 'linear-gradient(160deg, rgba(15,29,53,0.95), rgba(17,29,51,0.85))',
-        border: '1px solid rgba(200,150,62,0.14)',
-        borderRadius: 14, padding: '1.35rem 1.5rem',
-        transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
-        position: 'relative', overflow: 'hidden',
-        animation: `deluxe-fade-up 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+        position: 'relative',
+        padding: '1.5rem 1.5rem 1.35rem',
+        background: 'linear-gradient(170deg, rgba(28,26,36,0.92), rgba(15,14,20,0.85))',
+        border: `1px solid ${palette.hairline}`,
+        borderRadius: 4,
+        overflow: 'hidden',
+        transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+        animation: `noir-fade-up 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
       }}
     >
-      {/* Subtle gold shimmer sweep on hover */}
-      <div className="deluxe-shimmer-sweep" style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(120deg, transparent 30%, rgba(200,150,62,0.08) 50%, transparent 70%)',
-        opacity: 0, transition: 'opacity 0.4s', pointerEvents: 'none',
+      {/* Hairline corner accents */}
+      <span style={{
+        position: 'absolute', top: 0, left: 0,
+        width: 12, height: 12,
+        borderTop: `1px solid ${palette.champagne}`,
+        borderLeft: `1px solid ${palette.champagne}`,
+        opacity: 0.7,
       }} />
-      <div style={{
-        fontFamily: "'Syne', sans-serif",
-        fontSize: 'clamp(1.5rem, 3vw, 2.1rem)', fontWeight: 800,
-        color: colors.white, letterSpacing: '-0.04em',
-        background: 'linear-gradient(180deg, #fff 0%, #e8b85a 140%)',
-        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-      }}>
-        {displayValue}
-      </div>
-      <div style={{ fontSize: '0.8rem', color: colors.gray400, marginTop: '0.25rem' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '0.72rem', color: colors.gray600, marginTop: '0.15rem' }}>
-        {sub}
+      <span style={{
+        position: 'absolute', bottom: 0, right: 0,
+        width: 12, height: 12,
+        borderBottom: `1px solid ${palette.champagne}`,
+        borderRight: `1px solid ${palette.champagne}`,
+        opacity: 0.7,
+      }} />
+
+      {/* Shimmer sweep on hover */}
+      <div className="noir-shimmer-sweep" style={{
+        position: 'absolute', inset: 0,
+        background: `linear-gradient(120deg, transparent 35%, ${palette.hairlineHi} 50%, transparent 65%)`,
+        opacity: 0, transition: 'opacity 0.5s', pointerEvents: 'none',
+      }} />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{
+          fontFamily: fonts.mono,
+          fontSize: '0.62rem', fontWeight: 500,
+          color: palette.bronze,
+          letterSpacing: '0.16em',
+          marginBottom: '0.6rem',
+        }}>
+          {index}
+        </div>
+        <div style={{
+          fontFamily: fonts.serif,
+          fontSize: 'clamp(1.75rem, 3.2vw, 2.4rem)',
+          fontWeight: 500,
+          letterSpacing: '-0.03em',
+          color: palette.pearl,
+          lineHeight: 1,
+          fontVariationSettings: '"opsz" 144',
+          marginBottom: '0.6rem',
+        }}>
+          {displayValue}
+        </div>
+        <div style={{
+          fontSize: '0.78rem', fontWeight: 500,
+          color: palette.silk,
+          letterSpacing: '0.02em',
+          marginBottom: '0.2rem',
+        }}>
+          {label}
+        </div>
+        <div style={{
+          fontSize: '0.7rem', fontWeight: 300,
+          color: palette.cashmere,
+          fontStyle: 'italic',
+          fontFamily: fonts.serif,
+        }}>
+          {sub}
+        </div>
       </div>
     </div>
   );
 }
 
 //
-//  DeluxeBadge: small "Deluxe Edition" mark for the footer.
+//  DeluxeBadge — small "Deluxe Edition" mark for the footer.
 //
 function DeluxeBadge() {
   return (
     <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-      fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.16em',
+      display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+      fontFamily: fonts.mono,
+      fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.2em',
       textTransform: 'uppercase',
-      color: colors.gold,
-      padding: '0.3rem 0.7rem',
-      border: '1px solid rgba(200,150,62,0.3)',
-      borderRadius: '999px',
-      background: 'rgba(200,150,62,0.06)',
+      color: palette.champagne,
+      padding: '0.4rem 0.85rem',
+      border: `1px solid ${palette.hairlineHi}`,
+      borderRadius: 2,
+      background: 'rgba(212, 175, 122, 0.05)',
     }}>
-      <Sparkles size={11} />
-      Deluxe Edition · v2
+      <Sparkles size={10} strokeWidth={1.5} />
+      Deluxe Edition · v3
     </div>
   );
 }
 
 //
-//  FilmGrainOverlay: very subtle film grain texture for premium depth.
-//  Pure CSS — no image asset needed. Pointer-events:none so it never
-//  blocks clicks. z-index high but below nav.
+//  FilmGrainOverlay — very subtle film grain texture for premium depth.
+//  Pure CSS, pointer-events:none, low z-index so it never blocks clicks.
 //
 function FilmGrainOverlay() {
   return (
     <div aria-hidden style={{
       position: 'fixed', inset: 0, zIndex: 1,
       pointerEvents: 'none',
-      opacity: 0.04,
+      opacity: 0.035,
       backgroundImage:
         'url("data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E")',
       mixBlendMode: 'overlay',
+    }} />
+  );
+}
+
+//
+//  AmbientGlow — soft champagne radial glow positioned behind content.
+//  Used in hero and footer for a warm, luxe ambient lighting effect.
+//
+function AmbientGlow({
+  position, size = 600, opacity = 0.08,
+}: {
+  position: { top?: string; bottom?: string; left?: string; right?: string };
+  size?: number;
+  opacity?: number;
+}) {
+  return (
+    <div aria-hidden style={{
+      position: 'absolute',
+      ...position,
+      width: size, height: size,
+      background: `radial-gradient(circle, rgba(212,175,122,${opacity}) 0%, transparent 65%)`,
+      filter: 'blur(80px)',
+      pointerEvents: 'none',
+      zIndex: 0,
     }} />
   );
 }
@@ -430,6 +615,7 @@ function FilmGrainOverlay() {
 
 function Navigation({ activeSection }: { activeSection: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const links = [
     { id: 'about', label: 'About' },
     { id: 'experience', label: 'Experience' },
@@ -437,6 +623,13 @@ function Navigation({ activeSection }: { activeSection: string }) {
     { id: 'skills', label: 'Skills' },
     { id: 'contact', label: 'Contact' },
   ];
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const scrollTo = (id: string) => {
     setMobileOpen(false);
@@ -446,76 +639,135 @@ function Navigation({ activeSection }: { activeSection: string }) {
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: 'rgba(10,22,40,0.95)',
-      backdropFilter: 'blur(16px)',
-      borderBottom: `1px solid rgba(200,150,62,0.15)`,
-      padding: '0 1.5rem',
+      background: scrolled ? 'rgba(8,8,12,0.88)' : 'rgba(8,8,12,0.55)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderBottom: `1px solid ${scrolled ? palette.hairline : 'transparent'}`,
+      padding: '0 2rem',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      height: '64px',
+      height: '68px',
+      transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
     }}>
       <a href="/" style={{
-        fontFamily: "'Syne', sans-serif",
-        fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.03em',
-        color: colors.white, textDecoration: 'none',
+        fontFamily: fonts.serif,
+        fontWeight: 500, fontSize: '1.3rem',
+        letterSpacing: '-0.02em',
+        color: palette.pearl, textDecoration: 'none',
+        fontVariationSettings: '"opsz" 144',
+        display: 'flex', alignItems: 'baseline', gap: '0.1rem',
       }}>
-        MM<span style={{ color: colors.gold }}>.</span>
+        MM
+        <span style={{
+          color: palette.champagne,
+          fontStyle: 'italic',
+          fontWeight: 400,
+          fontSize: '1.1rem',
+        }}>·</span>
       </a>
 
       {/* Desktop nav */}
-      <div className="desktop-nav" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+      <div className="desktop-nav" style={{ display: 'flex', gap: '2.25rem', alignItems: 'center' }}>
         {links.map(l => (
-          <button key={l.id} onClick={() => scrollTo(l.id)} style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: '0.85rem', fontWeight: 500, letterSpacing: '0.02em',
-            color: activeSection === l.id ? colors.gold : colors.gray400,
-            transition: 'color 0.2s', fontFamily: 'inherit',
-          }}>
+          <button
+            key={l.id}
+            onClick={() => scrollTo(l.id)}
+            className="noir-nav-link"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: '0.78rem', fontWeight: 500,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: activeSection === l.id ? palette.champagne : palette.chiffon,
+              transition: 'color 0.3s', fontFamily: fonts.mono,
+              position: 'relative', padding: '0.25rem 0',
+            }}
+          >
             {l.label}
           </button>
         ))}
-        <button onClick={() => scrollTo('contact')} style={{
-          background: colors.gold, color: colors.navy,
-          fontFamily: 'inherit', fontSize: '0.82rem', fontWeight: 600,
-          padding: '0.5rem 1.25rem', borderRadius: '999px',
-          border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-        }}>
-          Let&apos;s talk
+        <button
+          onClick={() => scrollTo('contact')}
+          className="noir-cta-primary"
+          style={{
+            background: `linear-gradient(135deg, ${palette.champagne}, ${palette.champagneHi})`,
+            color: palette.onyx,
+            fontFamily: fonts.mono, fontSize: '0.7rem', fontWeight: 600,
+            padding: '0.6rem 1.4rem', borderRadius: 2,
+            border: 'none', cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            position: 'relative', overflow: 'hidden',
+          }}
+        >
+          <span className="noir-cta-shine" style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)',
+            transform: 'translateX(-100%)', transition: 'transform 0.6s',
+          }} />
+          <span style={{ position: 'relative', zIndex: 1 }}>Let&apos;s talk</span>
+          <ArrowRight size={12} style={{ position: 'relative', zIndex: 1 }} strokeWidth={2} />
         </button>
       </div>
 
       {/* Mobile burger */}
-      <button className="mobile-burger" onClick={() => setMobileOpen(!mobileOpen)} style={{
-        background: 'none', border: 'none', cursor: 'pointer', color: colors.white,
-        display: 'none',
-      }}>
-        {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+      <button
+        className="mobile-burger"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: palette.pearl, display: 'none',
+        }}
+      >
+        {mobileOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
       </button>
 
       {/* Mobile menu */}
       {mobileOpen && (
         <div style={{
-          position: 'fixed', top: 64, left: 0, right: 0, bottom: 0,
-          background: colors.navy, padding: '2rem',
-          display: 'flex', flexDirection: 'column', gap: '1.5rem',
+          position: 'fixed', top: 68, left: 0, right: 0, bottom: 0,
+          background: palette.onyx, padding: '2.5rem 2rem',
+          display: 'flex', flexDirection: 'column', gap: '1.75rem',
           zIndex: 99,
+          animation: 'noir-fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both',
         }}>
-          {links.map(l => (
-            <button key={l.id} onClick={() => scrollTo(l.id)} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: '1.1rem', fontWeight: 500,
-              color: activeSection === l.id ? colors.gold : colors.white,
-              textAlign: 'left', fontFamily: 'inherit',
-            }}>
+          {links.map((l, i) => (
+            <button
+              key={l.id}
+              onClick={() => scrollTo(l.id)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '1.5rem', fontWeight: 400,
+                color: activeSection === l.id ? palette.champagne : palette.pearl,
+                textAlign: 'left', fontFamily: fonts.serif,
+                fontStyle: 'italic',
+                fontVariationSettings: '"opsz" 144',
+                animation: `noir-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 60}ms both`,
+              }}
+            >
+              <span style={{
+                fontFamily: fonts.mono, fontSize: '0.7rem',
+                color: palette.bronze, marginRight: '1rem',
+                fontStyle: 'normal', letterSpacing: '0.18em',
+              }}>
+                0{i + 1}
+              </span>
               {l.label}
             </button>
           ))}
-          <button onClick={() => scrollTo('contact')} style={{
-            background: colors.gold, color: colors.navy,
-            fontFamily: 'inherit', fontSize: '0.95rem', fontWeight: 600,
-            padding: '0.75rem 1.5rem', borderRadius: '999px',
-            border: 'none', cursor: 'pointer', marginTop: '1rem',
-          }}>
-            Let&apos;s talk
+          <button
+            onClick={() => scrollTo('contact')}
+            style={{
+              background: `linear-gradient(135deg, ${palette.champagne}, ${palette.champagneHi})`,
+              color: palette.onyx,
+              fontFamily: fonts.mono, fontSize: '0.78rem', fontWeight: 600,
+              padding: '1rem 2rem', borderRadius: 2,
+              border: 'none', cursor: 'pointer', marginTop: '1rem',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}
+          >
+            Let&apos;s talk →
           </button>
         </div>
       )}
@@ -536,154 +788,229 @@ function HeroSection({ profile }: { profile: ProfileData }) {
     <section id="hero" className="hero-section" style={{
       minHeight: '100vh',
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: '1.15fr 1fr',
       gap: '4rem',
       alignItems: 'center',
-      maxWidth: 1080,
+      maxWidth: 1180,
       margin: '0 auto',
-      padding: '8rem 2.5rem 4rem',
+      padding: '9rem 2.5rem 5rem',
       position: 'relative',
     }}>
-      {/* Deluxe ambient gold glow behind hero — subtle radial gradient */}
-      <div aria-hidden style={{
-        position: 'absolute', top: '20%', right: '-10%',
-        width: '60vw', height: '60vw', maxWidth: 700, maxHeight: 700,
-        background: 'radial-gradient(circle, rgba(200,150,62,0.08) 0%, transparent 60%)',
-        filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0,
-      }} />
+      {/* Champagne ambient glow — warm, not cold */}
+      <AmbientGlow position={{ top: '10%', right: '-15%' }} size={750} opacity={0.1} />
+      <AmbientGlow position={{ bottom: '-10%', left: '-10%' }} size={500} opacity={0.05} />
 
       {/* Left */}
       <div style={{ position: 'relative', zIndex: 2 }}>
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-          background: 'rgba(200,150,62,0.12)', color: colors.gold,
-          fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.08em',
-          padding: '0.35rem 0.9rem', borderRadius: '999px',
-          textTransform: 'uppercase', marginBottom: '1.75rem',
-          animation: 'deluxe-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
+          display: 'inline-flex', alignItems: 'center', gap: '0.55rem',
+          background: 'rgba(212, 175, 122, 0.06)',
+          color: palette.champagne,
+          fontFamily: fonts.mono,
+          fontSize: '0.66rem', fontWeight: 500, letterSpacing: '0.2em',
+          padding: '0.45rem 1rem', borderRadius: 2,
+          textTransform: 'uppercase', marginBottom: '2rem',
+          border: `1px solid ${palette.hairline}`,
+          animation: 'noir-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
         }}>
           <span style={{
-            width: 6, height: 6, background: colors.gold, borderRadius: '50%',
-            animation: 'pulse 2s infinite',
+            width: 5, height: 5, background: palette.champagne, borderRadius: '50%',
+            boxShadow: `0 0 8px ${palette.champagne}`,
+            animation: 'noir-pulse 2.5s infinite',
           }} />
           Open to opportunities
         </div>
 
-        <h1 className="deluxe-hero-name" style={{
-          fontFamily: "'Syne', sans-serif",
-          fontSize: 'clamp(2.4rem, 5vw, 4.4rem)',
-          fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.04em',
-          color: colors.white, marginBottom: '1.5rem',
-          animation: 'deluxe-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both',
+        <h1 className="noir-hero-name" style={{
+          fontFamily: fonts.serif,
+          fontSize: 'clamp(2.6rem, 6vw, 5rem)',
+          fontWeight: 400, lineHeight: 1.0, letterSpacing: '-0.035em',
+          color: palette.pearl, marginBottom: '1.75rem',
+          fontVariationSettings: '"opsz" 144',
+          animation: 'noir-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both',
         }}>
           {firstName}<br />
-          {lastName ? (
+          {lastName && (
             <>
               <span style={{
-                background: 'linear-gradient(120deg, #c8963e 0%, #e8b85a 40%, #fff1d6 50%, #e8b85a 60%, #c8963e 100%)',
+                fontStyle: 'italic',
+                fontWeight: 300,
+                background: `linear-gradient(120deg, ${palette.champagne} 0%, ${palette.champagneHi} 30%, ${palette.champagneGlow} 50%, ${palette.champagneHi} 70%, ${palette.champagne} 100%)`,
                 backgroundSize: '200% 100%',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                animation: 'deluxe-gold-shimmer 6s ease-in-out infinite',
-              }}>{lastName}</span>.
+                animation: 'noir-shimmer 7s ease-in-out infinite',
+              }}>
+                {lastName}
+              </span>
+              <span style={{ color: palette.champagne, fontStyle: 'italic' }}>.</span>
             </>
-          ) : null}
+          )}
         </h1>
 
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          marginBottom: '1.75rem',
+          animation: 'noir-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both',
+        }}>
+          <span style={{
+            width: 32, height: 1,
+            background: palette.champagne,
+          }} />
+          <span style={{
+            fontFamily: fonts.mono,
+            fontSize: '0.7rem', fontWeight: 500,
+            letterSpacing: '0.18em', color: palette.chiffon,
+            textTransform: 'uppercase',
+          }}>
+            {profile.title}
+          </span>
+        </div>
+
         <p style={{
-          fontSize: '1.05rem', color: colors.gray400, fontWeight: 300,
-          maxWidth: 480, marginBottom: '2.5rem', lineHeight: 1.75,
-          animation: 'deluxe-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) 0.25s both',
+          fontSize: '1.05rem', color: palette.chiffon, fontWeight: 300,
+          maxWidth: 500, marginBottom: '2.75rem', lineHeight: 1.75,
+          fontFamily: fonts.sans,
+          animation: 'noir-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both',
         }}>
           {profile.bio ? profile.bio.split('.').slice(0, 2).join('.') + '.' : profile.heroSubtitle}
         </p>
 
         <div style={{
           display: 'flex', gap: '1rem', flexWrap: 'wrap',
-          animation: 'deluxe-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) 0.4s both',
+          animation: 'noir-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.5s both',
         }}>
-          <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="deluxe-cta-primary" style={{
-            background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldLight})`,
-            color: colors.navy,
-            fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600,
-            padding: '0.85rem 2rem', borderRadius: '999px',
-            border: 'none', cursor: 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            position: 'relative', overflow: 'hidden',
-            boxShadow: '0 4px 24px -6px rgba(200,150,62,0.4)',
-          }}>
-            <span className="deluxe-cta-shine" style={{
+          <button
+            onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })}
+            className="noir-cta-primary"
+            style={{
+              background: `linear-gradient(135deg, ${palette.champagne}, ${palette.champagneHi})`,
+              color: palette.onyx,
+              fontFamily: fonts.mono, fontSize: '0.74rem', fontWeight: 600,
+              padding: '0.95rem 2rem', borderRadius: 2,
+              border: 'none', cursor: 'pointer',
+              transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+              display: 'inline-flex', alignItems: 'center', gap: '0.55rem',
+              position: 'relative', overflow: 'hidden',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              boxShadow: `0 8px 32px -8px rgba(212, 175, 122, 0.35)`,
+            }}
+          >
+            <span className="noir-cta-shine" style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
-              transform: 'translateX(-100%)', transition: 'transform 0.6s',
+              background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)',
+              transform: 'translateX(-100%)', transition: 'transform 0.7s',
             }} />
             <span style={{ position: 'relative', zIndex: 1 }}>View my work</span>
-            <ArrowRight size={16} style={{ position: 'relative', zIndex: 1 }} />
+            <ArrowRight size={14} style={{ position: 'relative', zIndex: 1 }} strokeWidth={2} />
           </button>
-          <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} style={{
-            background: 'transparent', color: colors.white,
-            fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 500,
-            padding: '0.85rem 2rem', borderRadius: '999px',
-            border: '1.5px solid rgba(200,150,62,0.3)', cursor: 'pointer',
-            transition: 'all 0.3s',
-          }}>
+          <button
+            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            className="noir-cta-secondary"
+            style={{
+              background: 'transparent', color: palette.pearl,
+              fontFamily: fonts.mono, fontSize: '0.74rem', fontWeight: 500,
+              padding: '0.95rem 2rem', borderRadius: 2,
+              border: `1px solid ${palette.hairlineHi}`,
+              cursor: 'pointer', transition: 'all 0.4s',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}
+          >
             Get in touch
           </button>
         </div>
       </div>
 
-      {/* Right */}
+      {/* Right — stats + quote */}
       <div className="hero-stats" style={{
         display: 'flex', flexDirection: 'column', gap: '1.5rem',
         position: 'relative', zIndex: 2,
-        animation: 'deluxe-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.5s both',
+        animation: 'noir-fade-up 1s cubic-bezier(0.16,1,0.3,1) 0.6s both',
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <AnimatedStat
             value={profile.stat1Value} label={profile.stat1Label} sub={profile.stat1Sub}
-            delay={600}
+            delay={700} index="01"
           />
           <AnimatedStat
             value={profile.stat2Value} label={profile.stat2Label} sub={profile.stat2Sub}
-            delay={720}
+            delay={820} index="02"
           />
           <AnimatedStat
             value={profile.stat3Value} label={profile.stat3Label} sub={profile.stat3Sub}
-            delay={840}
+            delay={940} index="03"
           />
           <AnimatedStat
             value={profile.stat4Value} label={profile.stat4Label} sub={profile.stat4Sub}
-            delay={960}
+            delay={1060} index="04"
           />
         </div>
 
+        {/* Quote card — editorial pull-quote style */}
         <div style={{
-          background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldLight})`,
-          borderRadius: 12, padding: '1.5rem',
-          color: colors.navy,
+          background: `linear-gradient(135deg, ${palette.graphite}, ${palette.charcoal})`,
+          border: `1px solid ${palette.hairlineHi}`,
+          borderRadius: 4, padding: '1.75rem 1.85rem',
           position: 'relative', overflow: 'hidden',
-          animation: 'deluxe-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 1.1s both',
+          animation: 'noir-fade-up 1s cubic-bezier(0.16,1,0.3,1) 1.2s both',
         }}>
-          {/* Subtle shine sweep across the quote card */}
+          {/* Decorative corner accent */}
+          <span style={{
+            position: 'absolute', top: 0, left: 0,
+            width: 14, height: 14,
+            borderTop: `1px solid ${palette.champagne}`,
+            borderLeft: `1px solid ${palette.champagne}`,
+          }} />
+          <span style={{
+            position: 'absolute', bottom: 0, right: 0,
+            width: 14, height: 14,
+            borderBottom: `1px solid ${palette.champagne}`,
+            borderRight: `1px solid ${palette.champagne}`,
+          }} />
+
+          {/* Shimmer sweep */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)',
-            animation: 'deluxe-sweep 8s ease-in-out infinite',
+            background: `linear-gradient(120deg, transparent 35%, ${palette.hairlineHi} 50%, transparent 65%)`,
+            animation: 'noir-sweep 9s ease-in-out infinite',
           }} />
+
+          <Quote
+            size={28}
+            strokeWidth={1}
+            style={{
+              color: palette.champagne,
+              opacity: 0.4,
+              marginBottom: '0.75rem',
+              position: 'relative', zIndex: 1,
+            }}
+          />
           <p style={{
-            fontSize: '0.92rem', fontStyle: 'italic', lineHeight: 1.7, fontWeight: 400,
+            fontFamily: fonts.serif,
+            fontSize: '1.05rem', fontStyle: 'italic', fontWeight: 400,
+            lineHeight: 1.6, color: palette.pearl,
             position: 'relative', zIndex: 1,
+            fontVariationSettings: '"opsz" 144',
           }}>
-            &ldquo;{profile.quote}&rdquo;
+            {profile.quote}
           </p>
-          <cite style={{
-            display: 'block', marginTop: '0.75rem', fontStyle: 'normal',
-            fontSize: '0.78rem', opacity: 0.7,
+          <div style={{
+            marginTop: '1rem',
+            display: 'flex', alignItems: 'center', gap: '0.6rem',
             position: 'relative', zIndex: 1,
           }}>
-            — {profile.name}
-          </cite>
+            <span style={{
+              width: 20, height: 1, background: palette.champagne,
+            }} />
+            <cite style={{
+              fontFamily: fonts.mono, fontStyle: 'normal',
+              fontSize: '0.68rem', fontWeight: 500,
+              color: palette.champagne,
+              letterSpacing: '0.18em', textTransform: 'uppercase',
+            }}>
+              {profile.name}
+            </cite>
+          </div>
         </div>
       </div>
     </section>
@@ -696,80 +1023,133 @@ function HeroSection({ profile }: { profile: ProfileData }) {
 
 function AboutSection({ profile }: { profile: ProfileData }) {
   const principles = [
-    { icon: <BarChart3 size={20} />, title: 'Data before instinct', desc: 'Every recommendation I make is anchored in research, trend analysis, or performance data — not assumption.' },
-    { icon: <Sparkles size={20} />, title: 'Brands are conversations', desc: 'A brand isn\'t a logo. It\'s a consistent, evolving promise to a specific audience — and it breaks the second you stop listening.' },
-    { icon: <Target size={20} />, title: 'Campaigns should move people', desc: 'The best marketing doesn\'t just drive clicks. It creates moments — emotional, cultural, and memorable.' },
-    { icon: <Users size={20} />, title: 'Execution is everything', desc: 'A brilliant strategy that stays on a slide deck is worth nothing. I prioritise shipping real output.' },
+    { icon: <BarChart3 size={18} strokeWidth={1.5} />, title: 'Data before instinct', desc: 'Every recommendation I make is anchored in research, trend analysis, or performance data — not assumption.' },
+    { icon: <Sparkles size={18} strokeWidth={1.5} />, title: 'Brands are conversations', desc: 'A brand isn\'t a logo. It\'s a consistent, evolving promise to a specific audience — and it breaks the second you stop listening.' },
+    { icon: <Target size={18} strokeWidth={1.5} />, title: 'Campaigns should move people', desc: 'The best marketing doesn\'t just drive clicks. It creates moments — emotional, cultural, and memorable.' },
+    { icon: <Users size={18} strokeWidth={1.5} />, title: 'Execution is everything', desc: 'A brilliant strategy that stays on a slide deck is worth nothing. I prioritise shipping real output.' },
   ];
+
+  // Build bio with editorial drop cap on first letter
+  const bioText = profile.bio || '';
+  const firstLetter = bioText.charAt(0);
+  const restOfBio = bioText.slice(1);
 
   return (
     <section id="about" style={{
-      padding: '6rem 2.5rem', maxWidth: 1080, margin: '0 auto',
+      padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
+      position: 'relative',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.75rem' }}>
-        About
-      </div>
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
-      }}>
-        Who I am
-      </h2>
-      <p style={{ fontSize: '0.95rem', color: colors.gray400, marginBottom: '3rem' }}>
-        Marketer · BD Professional · Campaign Strategist
-      </p>
+      <Eyebrow index="01" label="About" />
+      <SectionHeading italic="Who I am">
+        The
+      </SectionHeading>
 
       {/* Contact pills */}
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
         {[
-          { icon: <Mail size={14} />, text: profile.email },
-          { icon: <Phone size={14} />, text: profile.phone },
-          { icon: <Linkedin size={14} />, text: 'LinkedIn Profile' },
+          { icon: <Mail size={13} strokeWidth={1.5} />, text: profile.email, href: `mailto:${profile.email}` },
+          { icon: <Phone size={13} strokeWidth={1.5} />, text: profile.phone, href: `tel:${profile.phone}` },
+          { icon: <Linkedin size={13} strokeWidth={1.5} />, text: 'LinkedIn Profile', href: `https://linkedin.com/in/${profile.linkedin}` },
         ].map((item, i) => (
-          <div key={i} style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-            background: colors.navyLight, border: '1px solid rgba(200,150,62,0.12)',
-            borderRadius: '999px', padding: '0.5rem 1rem',
-            fontSize: '0.82rem', color: colors.gray400,
-          }}>
-            <span style={{ color: colors.gold }}>{item.icon}</span>
+          <a
+            key={i}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              background: palette.charcoal,
+              border: `1px solid ${palette.hairline}`,
+              borderRadius: 2, padding: '0.55rem 1.05rem',
+              fontSize: '0.78rem', color: palette.chiffon,
+              textDecoration: 'none',
+              fontFamily: fonts.mono, letterSpacing: '0.02em',
+              transition: 'all 0.3s',
+            }}
+            className="noir-pill"
+          >
+            <span style={{ color: palette.champagne }}>{item.icon}</span>
             {item.text}
-          </div>
+          </a>
         ))}
       </div>
 
-      {/* Bio */}
+      {/* Bio with drop cap */}
       <div style={{
-        fontSize: '1rem', lineHeight: 1.8, color: colors.gray400,
-        maxWidth: 720, marginBottom: '3rem',
-      }}
-        dangerouslySetInnerHTML={{
-          __html: profile.bio
-            ?.replace(/I'm a\s*/i, 'I\'m a <strong style="color:#fff">')
-            .replace(/dual-degree/gi, '</strong>dual-degree<strong style="color:#fff">')
-            .replace(/from MSA University/gi, '</strong>from MSA University')
-            .replace(/multiple workflows simultaneously/gi, '<strong style="color:#fff">multiple workflows simultaneously</strong>')
-            || ''
-        }}
-      />
+        fontSize: '1.08rem', lineHeight: 1.85, color: palette.silk,
+        maxWidth: 760, marginBottom: '3.5rem', fontWeight: 300,
+        fontFamily: fonts.sans,
+      }}>
+        <span style={{
+          fontFamily: fonts.serif,
+          float: 'left',
+          fontSize: '4.2rem',
+          lineHeight: 0.85,
+          fontWeight: 500,
+          marginRight: '0.65rem',
+          marginTop: '0.35rem',
+          color: palette.champagne,
+          fontVariationSettings: '"opsz" 144',
+        }}>
+          {firstLetter}
+        </span>
+        {restOfBio}
+      </div>
 
-      {/* Principles grid */}
-      <div className="principles-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+      {/* Principles grid — editorial numbered cards */}
+      <div className="principles-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '1.25rem',
+      }}>
         {principles.map((p, i) => (
-          <div key={i} style={{
-            background: colors.navyLight,
-            border: '1px solid rgba(200,150,62,0.1)',
-            borderRadius: 12, padding: '1.5rem',
-            transition: 'all 0.25s',
-          }} className="principle-card">
-            <div style={{ color: colors.gold, marginBottom: '0.75rem' }}>{p.icon}</div>
+          <div
+            key={i}
+            className="noir-principle-card"
+            style={{
+              background: `linear-gradient(170deg, ${palette.charcoal}, ${palette.onyxLight})`,
+              border: `1px solid ${palette.hairline}`,
+              borderRadius: 4, padding: '1.75rem 1.5rem',
+              transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+              position: 'relative',
+            }}
+          >
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'flex-start', marginBottom: '1rem',
+            }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 2,
+                background: 'rgba(212, 175, 122, 0.08)',
+                border: `1px solid ${palette.hairline}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: palette.champagne,
+              }}>
+                {p.icon}
+              </div>
+              <span style={{
+                fontFamily: fonts.mono,
+                fontSize: '0.7rem', fontWeight: 500,
+                color: palette.bronze,
+                letterSpacing: '0.16em',
+              }}>
+                0{i + 1}
+              </span>
+            </div>
             <h4 style={{
-              fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '0.95rem',
-              color: colors.white, marginBottom: '0.5rem',
+              fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.05rem',
+              color: palette.pearl, marginBottom: '0.65rem',
+              lineHeight: 1.3, letterSpacing: '-0.01em',
+              fontVariationSettings: '"opsz" 144',
             }}>
               {p.title}
             </h4>
-            <p style={{ fontSize: '0.82rem', color: colors.gray400, lineHeight: 1.6 }}>{p.desc}</p>
+            <p style={{
+              fontSize: '0.82rem', color: palette.chiffon,
+              lineHeight: 1.65, fontWeight: 300, fontFamily: fonts.sans,
+            }}>
+              {p.desc}
+            </p>
           </div>
         ))}
       </div>
@@ -784,84 +1164,119 @@ function AboutSection({ profile }: { profile: ProfileData }) {
 function ExperienceSection({ experiences }: { experiences: ExperienceData[] }) {
   return (
     <section id="experience" style={{
-      padding: '6rem 2.5rem', maxWidth: 1080, margin: '0 auto',
+      padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
+      position: 'relative',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.75rem' }}>
-        Experience
-      </div>
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '3rem',
-      }}>
-        Professional History
-      </h2>
+      <Eyebrow index="02" label="Experience" />
+      <SectionHeading italic="history">
+        Professional
+      </SectionHeading>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {experiences.map((exp, i) => {
           const highlights = exp.highlights ? exp.highlights.split(',').map(h => h.trim()) : [];
           const details = exp.description ? exp.description.split('\n').filter(d => d.trim()) : [];
           return (
-            <div key={exp.id} style={{
-              position: 'relative',
-              paddingLeft: '2.5rem',
-              paddingBottom: i < experiences.length - 1 ? '2.5rem' : 0,
-            }}>
-              {/* Timeline line */}
-              <div style={{
-                position: 'absolute', left: 0, top: 8, bottom: 0,
-                width: 1, background: 'rgba(200,150,62,0.2)',
-              }} />
-              {/* Timeline dot */}
-              <div style={{
-                position: 'absolute', left: -4, top: 8,
-                width: 9, height: 9, borderRadius: '50%',
-                background: colors.gold,
-                border: `2px solid ${colors.navy}`,
-              }} />
-
-              <div style={{ marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '0.78rem', color: colors.gold, fontWeight: 500 }}>{exp.period}</span>
-              </div>
-              <div style={{ fontSize: '0.78rem', color: colors.gray600, marginBottom: '0.25rem' }}>{exp.company}</div>
-              <h3 style={{
-                fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1.15rem',
-                color: colors.white, marginBottom: '0.75rem',
-              }}>
-                {exp.role}
-              </h3>
-
-              {/* Tags */}
-              {highlights.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                  {highlights.map((h, hi) => (
-                    <span key={hi} style={{
-                      fontSize: '0.72rem', fontWeight: 500,
-                      background: 'rgba(200,150,62,0.1)', color: colors.gold,
-                      padding: '0.25rem 0.6rem', borderRadius: '999px',
-                    }}>
-                      {h}
-                    </span>
-                  ))}
+            <div
+              key={exp.id}
+              className="noir-exp-row"
+              style={{
+                position: 'relative',
+                display: 'grid',
+                gridTemplateColumns: '160px 1fr',
+                gap: '2.5rem',
+                padding: '2.5rem 0',
+                borderTop: `1px solid ${palette.hairline}`,
+              }}
+            >
+              {/* Period column */}
+              <div style={{ paddingTop: '0.15rem' }}>
+                <div style={{
+                  fontFamily: fonts.mono,
+                  fontSize: '0.72rem', fontWeight: 500,
+                  color: palette.champagne,
+                  letterSpacing: '0.1em',
+                  marginBottom: '0.5rem',
+                }}>
+                  {exp.period}
                 </div>
-              )}
+                <div style={{
+                  fontFamily: fonts.mono,
+                  fontSize: '0.65rem',
+                  color: palette.cashmere,
+                  letterSpacing: '0.16em',
+                }}>
+                  0{i + 1} / {experiences.length}
+                </div>
+              </div>
 
-              {/* Details */}
-              {details.length > 0 && (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {details.map((d, di) => (
-                    <li key={di} style={{
-                      fontSize: '0.88rem', color: colors.gray400, lineHeight: 1.7,
-                      paddingLeft: '1rem', position: 'relative', marginBottom: '0.25rem',
-                    }}>
-                      <span style={{
-                        position: 'absolute', left: 0, top: 10,
-                        width: 4, height: 4, borderRadius: '50%', background: colors.gray600,
-                      }} />
-                      {d.trim()}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {/* Content column */}
+              <div>
+                <h3 style={{
+                  fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.4rem',
+                  color: palette.pearl, marginBottom: '0.3rem',
+                  letterSpacing: '-0.02em',
+                  fontVariationSettings: '"opsz" 144',
+                }}>
+                  {exp.role}
+                </h3>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem',
+                  marginBottom: '1.25rem',
+                }}>
+                  <span style={{
+                    width: 16, height: 1, background: palette.champagne,
+                  }} />
+                  <span style={{
+                    fontFamily: fonts.mono,
+                    fontSize: '0.72rem', fontWeight: 500,
+                    color: palette.champagne,
+                    letterSpacing: '0.1em',
+                  }}>
+                    {exp.company}
+                  </span>
+                </div>
+
+                {/* Tags */}
+                {highlights.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                    {highlights.map((h, hi) => (
+                      <span key={hi} style={{
+                        fontFamily: fonts.mono,
+                        fontSize: '0.66rem', fontWeight: 500,
+                        background: 'rgba(212, 175, 122, 0.06)',
+                        border: `1px solid ${palette.hairline}`,
+                        color: palette.champagne,
+                        padding: '0.3rem 0.7rem', borderRadius: 2,
+                        letterSpacing: '0.06em',
+                      }}>
+                        {h}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Details */}
+                {details.length > 0 && (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {details.map((d, di) => (
+                      <li key={di} style={{
+                        fontSize: '0.88rem', color: palette.chiffon,
+                        lineHeight: 1.75,
+                        paddingLeft: '1.25rem', position: 'relative',
+                        marginBottom: '0.4rem', fontWeight: 300,
+                        fontFamily: fonts.sans,
+                      }}>
+                        <span style={{
+                          position: 'absolute', left: 0, top: 12,
+                          width: 8, height: 1, background: palette.bronze,
+                        }} />
+                        {d.trim()}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           );
         })}
@@ -880,24 +1295,24 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
 
   return (
     <section id="work" style={{
-      padding: '6rem 2.5rem', maxWidth: 1080, margin: '0 auto',
+      padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
+      position: 'relative',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.75rem' }}>
-        Work & Case Studies
-      </div>
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
-      }}>
-        Selected Projects
-      </h2>
-      <p style={{ fontSize: '0.9rem', color: colors.gray400, marginBottom: '3rem', maxWidth: 600 }}>
-        Brand analysis, campaign strategy, and marketing concepts developed as part of portfolio work and internship preparation.
-      </p>
+      <Eyebrow index="03" label="Work & Case Studies" />
+      <SectionHeading
+        italic="projects"
+        sub="Brand analysis, campaign strategy, and marketing concepts developed as part of portfolio work and internship preparation."
+      >
+        Selected
+      </SectionHeading>
 
       {/* Project Cards */}
-      <div className="projects-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        {projects.map((project) => {
+      <div className="projects-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '1.5rem', marginBottom: '3rem',
+      }}>
+        {projects.map((project, i) => {
           const tags = project.tags ? project.tags.split(',').map(t => t.trim()) : [];
           const imgSrc = getProjectImage(project);
           const hasDetail = project.overview || project.challenge || project.approach || project.outcome;
@@ -907,82 +1322,116 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
               href={`/projects/${project.slug}`}
               style={{
                 display: 'block',
-                background: colors.navyLight,
-                border: '1px solid rgba(200,150,62,0.1)',
-                borderRadius: 16, overflow: 'hidden', transition: 'all 0.3s',
+                background: palette.charcoal,
+                border: `1px solid ${palette.hairline}`,
+                borderRadius: 4, overflow: 'hidden',
+                transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
                 textDecoration: 'none',
+                position: 'relative',
               }}
-              className="project-card"
+              className="noir-project-card"
             >
-              {/* Project Image / Logo */}
+              {/* Project image / logo */}
               <div style={{
-                width: '100%', height: 200, position: 'relative', overflow: 'hidden',
+                width: '100%', height: 220, position: 'relative', overflow: 'hidden',
                 background: imgSrc.endsWith('.png')
-                  ? 'linear-gradient(135deg, #0d1f3c 0%, #142952 100%)'
-                  : colors.navyLight,
+                  ? `linear-gradient(135deg, ${palette.graphite} 0%, ${palette.onyxLight} 100%)`
+                  : palette.charcoal,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <img
                   src={imgSrc}
                   alt={project.title}
                   style={{
-                    width: imgSrc.endsWith('.png') ? '60%' : '100%',
-                    height: imgSrc.endsWith('.png') ? '60%' : '100%',
+                    width: imgSrc.endsWith('.png') ? '55%' : '100%',
+                    height: imgSrc.endsWith('.png') ? '55%' : '100%',
                     objectFit: imgSrc.endsWith('.png') ? 'contain' : 'cover',
-                    transition: 'transform 0.4s',
+                    transition: 'transform 0.6s cubic-bezier(0.16,1,0.3,1)',
                   }}
                 />
                 <div style={{
                   position: 'absolute', inset: 0,
                   background: imgSrc.endsWith('.png')
-                    ? 'linear-gradient(to bottom, transparent 60%, rgba(10,22,40,0.9))'
-                    : 'linear-gradient(to bottom, transparent 40%, rgba(10,22,40,0.9))',
+                    ? `linear-gradient(to bottom, transparent 55%, ${palette.onyxLight}99)`
+                    : `linear-gradient(to bottom, transparent 35%, ${palette.onyxLight}cc)`,
                 }} />
+
+                {/* Editorial number badge */}
+                <div style={{
+                  position: 'absolute', top: 14, left: 14,
+                  fontFamily: fonts.mono,
+                  fontSize: '0.65rem', fontWeight: 500,
+                  color: palette.champagne,
+                  letterSpacing: '0.16em',
+                  padding: '0.3rem 0.55rem',
+                  background: 'rgba(8,8,12,0.65)',
+                  backdropFilter: 'blur(8px)',
+                  border: `1px solid ${palette.hairline}`,
+                  borderRadius: 2,
+                }}>
+                  0{i + 1}
+                </div>
+
                 {/* Category badge */}
                 <div style={{
-                  position: 'absolute', top: 12, left: 12,
-                  background: 'rgba(10,22,40,0.8)', backdropFilter: 'blur(8px)',
-                  borderRadius: '999px', padding: '0.3rem 0.8rem',
-                  fontSize: '0.72rem', fontWeight: 600, color: colors.gold,
-                  letterSpacing: '0.04em',
+                  position: 'absolute', top: 14, right: 14,
+                  background: 'rgba(8,8,12,0.65)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: 2, padding: '0.3rem 0.7rem',
+                  fontFamily: fonts.mono,
+                  fontSize: '0.62rem', fontWeight: 500,
+                  color: palette.champagne,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  border: `1px solid ${palette.hairline}`,
                 }}>
                   {project.category}
                 </div>
+
                 {/* Read case study badge */}
                 {hasDetail && (
                   <div style={{
-                    position: 'absolute', bottom: 12, right: 12,
-                    background: colors.gold, color: colors.navy,
-                    borderRadius: '999px', padding: '0.3rem 0.75rem',
-                    fontSize: '0.7rem', fontWeight: 700,
-                    letterSpacing: '0.04em',
-                    display: 'flex', alignItems: 'center', gap: 4,
+                    position: 'absolute', bottom: 14, right: 14,
+                    background: `linear-gradient(135deg, ${palette.champagne}, ${palette.champagneHi})`,
+                    color: palette.onyx,
+                    borderRadius: 2, padding: '0.4rem 0.8rem',
+                    fontFamily: fonts.mono,
+                    fontSize: '0.62rem', fontWeight: 600,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
                   }}>
-                    Read case study <ArrowRight size={12} />
+                    Case study <ArrowUpRight size={11} strokeWidth={2} />
                   </div>
                 )}
               </div>
 
-              <div style={{ padding: '1.5rem' }}>
+              <div style={{ padding: '1.5rem 1.65rem 1.65rem' }}>
                 <h3 style={{
-                  fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1.05rem',
-                  color: colors.white, marginBottom: '0.5rem', lineHeight: 1.3,
+                  fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.2rem',
+                  color: palette.pearl, marginBottom: '0.6rem', lineHeight: 1.3,
+                  letterSpacing: '-0.02em',
+                  fontVariationSettings: '"opsz" 144',
                 }}>
                   {project.title}
                 </h3>
                 <p style={{
-                  fontSize: '0.85rem', color: colors.gray400, lineHeight: 1.6,
-                  marginBottom: '1rem',
-                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  fontSize: '0.86rem', color: palette.chiffon, lineHeight: 1.65,
+                  marginBottom: '1.1rem', fontWeight: 300, fontFamily: fonts.sans,
+                  display: '-webkit-box', WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }}>
                   {project.description}
                 </p>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                   {tags.map((tag, ti) => (
                     <span key={ti} style={{
-                      fontSize: '0.7rem', fontWeight: 500,
-                      background: 'rgba(200,150,62,0.1)', color: colors.gold,
-                      padding: '0.2rem 0.55rem', borderRadius: '999px',
+                      fontFamily: fonts.mono,
+                      fontSize: '0.62rem', fontWeight: 500,
+                      background: 'rgba(212, 175, 122, 0.06)',
+                      border: `1px solid ${palette.hairline}`,
+                      color: palette.champagne,
+                      padding: '0.25rem 0.6rem', borderRadius: 2,
+                      letterSpacing: '0.05em',
                     }}>
                       {tag}
                     </span>
@@ -997,37 +1446,68 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
       {/* Campaign Spotlight */}
       {selectedCampaign && (
         <div style={{
-          background: `linear-gradient(135deg, ${colors.navyLight}, ${colors.navyMid})`,
-          border: `1px solid rgba(200,150,62,0.2)`,
-          borderRadius: 16, padding: '2.5rem', marginBottom: '2rem',
+          background: `linear-gradient(135deg, ${palette.charcoal}, ${palette.onyxLight})`,
+          border: `1px solid ${palette.hairlineHi}`,
+          borderRadius: 4, padding: '2.5rem',
+          position: 'relative', overflow: 'hidden',
         }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.5rem' }}>
-            Campaign Spotlight
-          </div>
+          <div style={{
+            position: 'absolute', top: 0, left: 0,
+            width: 18, height: 18,
+            borderTop: `1px solid ${palette.champagne}`,
+            borderLeft: `1px solid ${palette.champagne}`,
+          }} />
+          <div style={{
+            position: 'absolute', bottom: 0, right: 0,
+            width: 18, height: 18,
+            borderBottom: `1px solid ${palette.champagne}`,
+            borderRight: `1px solid ${palette.champagne}`,
+          }} />
+
+          <Eyebrow index="★" label="Campaign Spotlight" />
           <h3 style={{
-            fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '1.5rem',
-            color: colors.white, marginBottom: '0.5rem',
+            fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.85rem',
+            color: palette.pearl, marginBottom: '0.85rem',
+            letterSpacing: '-0.02em',
+            fontVariationSettings: '"opsz" 144',
           }}>
             {selectedCampaign.title}
           </h3>
-          <p style={{ fontSize: '0.95rem', color: colors.gray400, marginBottom: '1.5rem', lineHeight: 1.7 }}>
+          <p style={{
+            fontSize: '0.96rem', color: palette.chiffon, marginBottom: '1.75rem',
+            lineHeight: 1.75, maxWidth: 640, fontWeight: 300,
+            fontFamily: fonts.sans,
+          }}>
             {selectedCampaign.description}
           </p>
 
-          {/* Campaign details */}
           {selectedCampaign.details && selectedCampaign.details !== '{}' && (
-            <div className="campaign-details-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
+            <div className="campaign-details-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: '1rem',
+            }}>
               {(() => {
                 try {
                   const details = JSON.parse(selectedCampaign.details);
                   return Object.entries(details).map(([key, value]) => (
                     <div key={key} style={{
-                      background: colors.navy, borderRadius: 8, padding: '1rem',
+                      background: palette.onyx, borderRadius: 2, padding: '1.1rem',
+                      border: `1px solid ${palette.hairline}`,
                     }}>
-                      <div style={{ fontSize: '0.7rem', color: colors.gray600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+                      <div style={{
+                        fontFamily: fonts.mono,
+                        fontSize: '0.62rem', color: palette.bronze,
+                        textTransform: 'uppercase', letterSpacing: '0.14em',
+                        marginBottom: '0.45rem',
+                      }}>
                         {key}
                       </div>
-                      <div style={{ fontSize: '0.9rem', color: colors.white, fontWeight: 500 }}>
+                      <div style={{
+                        fontFamily: fonts.serif,
+                        fontSize: '1rem', color: palette.pearl, fontWeight: 500,
+                        fontVariationSettings: '"opsz" 144',
+                      }}>
                         {String(value)}
                       </div>
                     </div>
@@ -1038,12 +1518,16 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
           )}
 
           {selectedCampaign.tags && (
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '1.75rem' }}>
               {selectedCampaign.tags.split(',').map((tag, i) => (
                 <span key={i} style={{
-                  fontSize: '0.72rem', fontWeight: 500,
-                  background: 'rgba(200,150,62,0.15)', color: colors.gold,
-                  padding: '0.3rem 0.7rem', borderRadius: '999px',
+                  fontFamily: fonts.mono,
+                  fontSize: '0.66rem', fontWeight: 500,
+                  background: 'rgba(212, 175, 122, 0.1)',
+                  border: `1px solid ${palette.hairline}`,
+                  color: palette.champagne,
+                  padding: '0.35rem 0.75rem', borderRadius: 2,
+                  letterSpacing: '0.06em',
                 }}>
                   {tag.trim()}
                 </span>
@@ -1063,68 +1547,104 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
 function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
   return (
     <section id="skills" style={{
-      padding: '6rem 2.5rem', maxWidth: 1080, margin: '0 auto',
+      padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
+      position: 'relative',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.75rem' }}>
-        Capabilities
-      </div>
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
-      }}>
-        Skills Dashboard
-      </h2>
-      <p style={{ fontSize: '0.88rem', color: colors.gray400, marginBottom: '3rem', maxWidth: 560 }}>
-        A working snapshot of where I am today — honest, not inflated. The bars reflect demonstrated applied experience, not aspirational claims.
-      </p>
+      <Eyebrow index="04" label="Capabilities" />
+      <SectionHeading
+        italic="dashboard"
+        sub="A working snapshot of where I am today — honest, not inflated. The bars reflect demonstrated applied experience, not aspirational claims."
+      >
+        Skills
+      </SectionHeading>
 
-      <div className="skills-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {skills.map((cat) => {
+      <div className="skills-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '1.5rem',
+      }}>
+        {skills.map((cat, ci) => {
           let skillList: string[] = [];
           try { skillList = JSON.parse(cat.skills); } catch { skillList = cat.skills.split(',').map(s => s.trim()); }
-          const icon = skillIconMap[cat.name] || <LayoutGrid size={20} />;
+          const icon = skillIconMap[cat.name] || <LayoutGrid size={18} strokeWidth={1.5} />;
           const barWidths = skillBarWidths[cat.name] || {};
 
           return (
-            <div key={cat.id} style={{
-              background: colors.navyLight,
-              border: '1px solid rgba(200,150,62,0.1)',
-              borderRadius: 16, padding: '1.75rem',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <div
+              key={cat.id}
+              style={{
+                background: `linear-gradient(170deg, ${palette.charcoal}, ${palette.onyxLight})`,
+                border: `1px solid ${palette.hairline}`,
+                borderRadius: 4, padding: '1.85rem 1.65rem',
+                position: 'relative',
+              }}
+              className="noir-skill-card"
+            >
+              {/* Number badge */}
+              <span style={{
+                position: 'absolute', top: 14, right: 14,
+                fontFamily: fonts.mono,
+                fontSize: '0.62rem', fontWeight: 500,
+                color: palette.bronze, letterSpacing: '0.16em',
+              }}>
+                0{ci + 1}
+              </span>
+
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.85rem',
+                marginBottom: '1.75rem',
+              }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: 'rgba(200,150,62,0.12)',
+                  width: 40, height: 40, borderRadius: 2,
+                  background: 'rgba(212, 175, 122, 0.08)',
+                  border: `1px solid ${palette.hairline}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: colors.gold,
+                  color: palette.champagne,
                 }}>
                   {icon}
                 </div>
                 <h3 style={{
-                  fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1rem',
-                  color: colors.white,
+                  fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.1rem',
+                  color: palette.pearl, letterSpacing: '-0.01em',
+                  fontVariationSettings: '"opsz" 144',
                 }}>
                   {cat.name}
                 </h3>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {skillList.map((skill, si) => {
                   const width = barWidths[skill] || Math.floor(Math.random() * 30 + 50);
                   return (
                     <div key={si}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                        <span style={{ fontSize: '0.82rem', color: colors.gray400 }}>{skill}</span>
-                        <span style={{ fontSize: '0.72rem', color: colors.gray600 }}>{width}%</span>
+                      <div style={{
+                        display: 'flex', justifyContent: 'space-between',
+                        marginBottom: '0.45rem', alignItems: 'baseline',
+                      }}>
+                        <span style={{
+                          fontSize: '0.82rem', color: palette.silk,
+                          fontWeight: 400, fontFamily: fonts.sans,
+                        }}>
+                          {skill}
+                        </span>
+                        <span style={{
+                          fontFamily: fonts.mono,
+                          fontSize: '0.66rem', color: palette.champagne,
+                          fontWeight: 500,
+                        }}>
+                          {width}%
+                        </span>
                       </div>
                       <div style={{
-                        height: 4, borderRadius: 2, background: 'rgba(200,150,62,0.1)',
+                        height: 2, background: palette.hairlineSoft,
+                        borderRadius: 0, overflow: 'hidden',
                       }}>
                         <div style={{
-                          height: '100%', borderRadius: 2,
-                          background: `linear-gradient(90deg, ${colors.gold}, ${colors.goldLight})`,
+                          height: '100%',
+                          background: `linear-gradient(90deg, ${palette.bronze}, ${palette.champagne}, ${palette.champagneHi})`,
                           width: `${width}%`,
-                          transition: 'width 0.8s ease',
+                          transition: 'width 1s cubic-bezier(0.16,1,0.3,1)',
+                          boxShadow: `0 0 8px rgba(212, 175, 122, 0.4)`,
                         }} />
                       </div>
                     </div>
@@ -1148,93 +1668,196 @@ function EducationSection({ education }: { education: EducationData[] }) {
 
   return (
     <section id="education" style={{
-      padding: '6rem 2.5rem', maxWidth: 1080, margin: '0 auto',
+      padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
+      position: 'relative',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.75rem' }}>
-        Education
-      </div>
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '3rem',
-      }}>
-        Academic Background
-      </h2>
+      <Eyebrow index="05" label="Education" />
+      <SectionHeading italic="background">
+        Academic
+      </SectionHeading>
 
-      {education.map((edu) => (
-        <div key={edu.id} style={{
-          background: colors.navyLight,
-          border: '1px solid rgba(200,150,62,0.1)',
-          borderRadius: 16, padding: '2rem', marginBottom: '2rem',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem', marginBottom: '1rem' }}>
+      {education.map((edu, i) => (
+        <div
+          key={edu.id}
+          style={{
+            background: `linear-gradient(170deg, ${palette.charcoal}, ${palette.onyxLight})`,
+            border: `1px solid ${palette.hairline}`,
+            borderRadius: 4, padding: '2rem 2.25rem', marginBottom: '1.5rem',
+            position: 'relative',
+          }}
+          className="noir-edu-card"
+        >
+          <span style={{
+            position: 'absolute', top: 16, right: 18,
+            fontFamily: fonts.mono,
+            fontSize: '0.66rem', fontWeight: 500,
+            color: palette.bronze, letterSpacing: '0.16em',
+          }}>
+            0{i + 1}
+          </span>
+
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: '1.25rem',
+            marginBottom: '1.25rem',
+          }}>
             <div style={{
-              width: 48, height: 48, borderRadius: 12,
-              background: 'rgba(200,150,62,0.1)',
+              width: 52, height: 52, borderRadius: 2,
+              background: 'rgba(212, 175, 122, 0.08)',
+              border: `1px solid ${palette.hairline}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: colors.gold, flexShrink: 0,
+              color: palette.champagne, flexShrink: 0,
             }}>
-              <GraduationCap size={24} />
+              <GraduationCap size={22} strokeWidth={1.5} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h3 style={{
-                fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1.1rem',
-                color: colors.white, marginBottom: '0.25rem',
+                fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.25rem',
+                color: palette.pearl, marginBottom: '0.35rem',
+                letterSpacing: '-0.02em', lineHeight: 1.3,
+                fontVariationSettings: '"opsz" 144',
               }}>
                 {edu.degree}
               </h3>
-              <p style={{ fontSize: '0.9rem', color: colors.gold, marginBottom: '0.25rem' }}>{edu.institution}</p>
-              <p style={{ fontSize: '0.82rem', color: colors.gray600 }}>{edu.year} · Giza, Egypt</p>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                marginBottom: '0.25rem',
+              }}>
+                <span style={{
+                  width: 14, height: 1, background: palette.champagne,
+                }} />
+                <span style={{
+                  fontFamily: fonts.mono,
+                  fontSize: '0.74rem', fontWeight: 500,
+                  color: palette.champagne, letterSpacing: '0.08em',
+                }}>
+                  {edu.institution}
+                </span>
+              </div>
+              <p style={{
+                fontFamily: fonts.mono,
+                fontSize: '0.68rem', color: palette.cashmere,
+                letterSpacing: '0.12em',
+              }}>
+                {edu.year} · GIZA, EGYPT
+              </p>
             </div>
           </div>
 
           {edu.details && (
             <div style={{
-              background: colors.navy, borderRadius: 8, padding: '1rem',
-              fontSize: '0.82rem', color: colors.gray400, lineHeight: 1.7,
+              background: palette.onyx, borderRadius: 2, padding: '1.1rem 1.25rem',
+              border: `1px solid ${palette.hairlineSoft}`,
             }}>
-              <div style={{ fontSize: '0.72rem', color: colors.gray600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+              <div style={{
+                fontFamily: fonts.mono,
+                fontSize: '0.62rem', color: palette.bronze,
+                textTransform: 'uppercase', letterSpacing: '0.16em',
+                marginBottom: '0.55rem',
+              }}>
                 Relevant Coursework
               </div>
-              {edu.details}
+              <div style={{
+                fontSize: '0.84rem', color: palette.chiffon, lineHeight: 1.7,
+                fontWeight: 300, fontFamily: fonts.sans,
+              }}>
+                {edu.details}
+              </div>
             </div>
           )}
         </div>
       ))}
 
       {/* Languages */}
-      <div className="lang-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="lang-grid" style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: '1rem', marginBottom: '2rem',
+      }}>
         {[
-          { lang: 'Arabic', level: 'Native Proficiency' },
-          { lang: 'English', level: 'C1 — Professional Proficiency' },
+          { lang: 'Arabic', level: 'Native Proficiency', percent: 100 },
+          { lang: 'English', level: 'C1 — Professional Proficiency', percent: 85 },
         ].map((l, i) => (
-          <div key={i} style={{
-            background: colors.navyLight,
-            border: '1px solid rgba(200,150,62,0.1)',
-            borderRadius: 12, padding: '1.25rem',
-          }}>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 600, fontSize: '1rem', color: colors.white, marginBottom: '0.25rem' }}>
-              {l.lang}
+          <div
+            key={i}
+            style={{
+              background: `linear-gradient(170deg, ${palette.charcoal}, ${palette.onyxLight})`,
+              border: `1px solid ${palette.hairline}`,
+              borderRadius: 4, padding: '1.5rem 1.65rem',
+              position: 'relative',
+            }}
+          >
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'baseline', marginBottom: '0.5rem',
+            }}>
+              <div style={{
+                fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.15rem',
+                color: palette.pearl,
+                fontVariationSettings: '"opsz" 144',
+              }}>
+                {l.lang}
+              </div>
+              <div style={{
+                fontFamily: fonts.mono,
+                fontSize: '0.7rem', color: palette.champagne, fontWeight: 500,
+              }}>
+                {l.percent}%
+              </div>
             </div>
-            <div style={{ fontSize: '0.82rem', color: colors.gray400 }}>{l.level}</div>
+            <div style={{
+              fontSize: '0.78rem', color: palette.chiffon,
+              marginBottom: '0.85rem', fontFamily: fonts.sans,
+              fontStyle: 'italic',
+            }}>
+              {l.level}
+            </div>
+            <div style={{
+              height: 2, background: palette.hairlineSoft,
+            }}>
+              <div style={{
+                height: '100%',
+                background: `linear-gradient(90deg, ${palette.bronze}, ${palette.champagne}, ${palette.champagneHi})`,
+                width: `${l.percent}%`,
+                boxShadow: `0 0 8px rgba(212, 175, 122, 0.4)`,
+              }} />
+            </div>
           </div>
         ))}
       </div>
 
       {/* Career Focus */}
       <div style={{
-        background: colors.navyLight,
-        border: '1px solid rgba(200,150,62,0.1)',
-        borderRadius: 16, padding: '1.75rem',
+        background: `linear-gradient(135deg, ${palette.charcoal}, ${palette.onyxLight})`,
+        border: `1px solid ${palette.hairline}`,
+        borderRadius: 4, padding: '1.85rem 2rem',
+        position: 'relative',
       }}>
-        <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.gold, marginBottom: '1rem' }}>
-          Career Focus Areas
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.7rem',
+          marginBottom: '1.25rem',
+        }}>
+          <span style={{
+            fontFamily: fonts.mono,
+            fontSize: '0.66rem', fontWeight: 500,
+            color: palette.champagne,
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+          }}>
+            Career Focus
+          </span>
+          <span style={{
+            flex: 1, height: 1,
+            background: `linear-gradient(90deg, ${palette.hairlineHi}, transparent)`,
+          }} />
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {careerFocus.map((f, i) => (
             <span key={i} style={{
-              fontSize: '0.8rem', fontWeight: 500,
-              background: 'rgba(200,150,62,0.1)', color: colors.gold,
-              padding: '0.4rem 0.9rem', borderRadius: '999px',
+              fontFamily: fonts.mono,
+              fontSize: '0.72rem', fontWeight: 500,
+              background: 'rgba(212, 175, 122, 0.06)',
+              border: `1px solid ${palette.hairline}`,
+              color: palette.champagne,
+              padding: '0.5rem 1rem', borderRadius: 2,
+              letterSpacing: '0.06em',
             }}>
               {f}
             </span>
@@ -1252,45 +1875,81 @@ function EducationSection({ education }: { education: EducationData[] }) {
 function ContactSection({ profile }: { profile: ProfileData }) {
   return (
     <section id="contact" style={{
-      padding: '6rem 2.5rem', maxWidth: 1080, margin: '0 auto',
+      padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
+      position: 'relative',
     }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.gold, marginBottom: '0.75rem' }}>
-        Contact
-      </div>
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.03em', color: colors.white, marginBottom: '0.5rem',
-      }}>
-        Let&apos;s build something.
-      </h2>
-      <p style={{ fontSize: '0.9rem', color: colors.gray400, marginBottom: '3rem', maxWidth: 560 }}>
-        Looking to hire, collaborate, or discuss a brief? I&apos;m available for entry-level roles and internships in marketing, media buying, and business development.
-      </p>
+      <AmbientGlow position={{ bottom: '0%', right: '-10%' }} size={500} opacity={0.07} />
 
-      <div className="contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+      <Eyebrow index="06" label="Contact" />
+      <SectionHeading
+        italic="something."
+        sub="Looking to hire, collaborate, or discuss a brief? I'm available for entry-level roles and internships in marketing, media buying, and business development."
+      >
+        Let&apos;s build
+      </SectionHeading>
+
+      <div className="contact-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '1.25rem', marginBottom: '2rem', position: 'relative', zIndex: 2,
+      }}>
         {[
-          { icon: <Mail size={20} />, label: 'Send an email', value: profile.email, href: `mailto:${profile.email}` },
-          { icon: <Linkedin size={20} />, label: 'LinkedIn', value: 'LinkedIn Profile', href: `https://linkedin.com/in/${profile.linkedin}` },
-          { icon: <Phone size={20} />, label: 'Phone', value: profile.phone, href: `tel:${profile.phone}` },
+          { icon: <Mail size={20} strokeWidth={1.5} />, label: 'Send an email', value: profile.email, href: `mailto:${profile.email}` },
+          { icon: <Linkedin size={20} strokeWidth={1.5} />, label: 'LinkedIn', value: 'LinkedIn Profile', href: `https://linkedin.com/in/${profile.linkedin}` },
+          { icon: <Phone size={20} strokeWidth={1.5} />, label: 'Phone', value: profile.phone, href: `tel:${profile.phone}` },
         ].map((item, i) => (
-          <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" style={{
-            background: colors.navyLight,
-            border: '1px solid rgba(200,150,62,0.1)',
-            borderRadius: 16, padding: '1.75rem',
-            textDecoration: 'none', transition: 'all 0.25s',
-            display: 'flex', flexDirection: 'column', gap: '0.75rem',
-          }} className="contact-card">
+          <a
+            key={i}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              background: `linear-gradient(170deg, ${palette.charcoal}, ${palette.onyxLight})`,
+              border: `1px solid ${palette.hairline}`,
+              borderRadius: 4, padding: '1.85rem 1.65rem',
+              textDecoration: 'none',
+              transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+              display: 'flex', flexDirection: 'column', gap: '1rem',
+              position: 'relative', overflow: 'hidden',
+            }}
+            className="noir-contact-card"
+          >
             <div style={{
-              width: 44, height: 44, borderRadius: 12,
-              background: 'rgba(200,150,62,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: colors.gold,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
             }}>
-              {item.icon}
+              <div style={{
+                width: 46, height: 46, borderRadius: 2,
+                background: 'rgba(212, 175, 122, 0.08)',
+                border: `1px solid ${palette.hairline}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: palette.champagne,
+              }}>
+                {item.icon}
+              </div>
+              <ArrowUpRight
+                size={16}
+                strokeWidth={1.5}
+                style={{ color: palette.bronze }}
+                className="noir-arrow"
+              />
             </div>
             <div>
-              <div style={{ fontSize: '0.78rem', color: colors.gray600, marginBottom: '0.25rem' }}>{item.label}</div>
-              <div style={{ fontSize: '0.9rem', color: colors.white, fontWeight: 500 }}>{item.value}</div>
+              <div style={{
+                fontFamily: fonts.mono,
+                fontSize: '0.66rem', color: palette.cashmere,
+                marginBottom: '0.4rem', letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+              }}>
+                {item.label}
+              </div>
+              <div style={{
+                fontFamily: fonts.serif,
+                fontSize: '0.95rem', color: palette.pearl, fontWeight: 500,
+                fontVariationSettings: '"opsz" 144',
+                letterSpacing: '-0.01em',
+              }}>
+                {item.value}
+              </div>
             </div>
           </a>
         ))}
@@ -1306,33 +1965,48 @@ function ContactSection({ profile }: { profile: ProfileData }) {
 function Footer({ profile }: { profile: ProfileData }) {
   return (
     <footer style={{
-      borderTop: '1px solid rgba(200,150,62,0.12)',
-      padding: '2.5rem 2.5rem',
+      borderTop: `1px solid ${palette.hairline}`,
+      padding: '3rem 2.5rem 2.5rem',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      maxWidth: 1080, margin: '0 auto',
-      flexWrap: 'wrap', gap: '1.25rem',
+      maxWidth: 1180, margin: '0 auto',
+      flexWrap: 'wrap', gap: '1.5rem',
       position: 'relative',
     }}>
-      {/* Soft gold glow above footer for a premium closing feel */}
+      {/* Soft champagne glow line above footer */}
       <div aria-hidden style={{
         position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '80%', height: 1,
-        background: 'linear-gradient(90deg, transparent, rgba(200,150,62,0.5), transparent)',
+        width: '70%', height: 1,
+        background: `linear-gradient(90deg, transparent, ${palette.champagne}aa, transparent)`,
       }} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <p style={{ fontSize: '0.8rem', color: colors.gray600, margin: 0 }}>
-          &copy; 2025 {profile.name} · Giza, Egypt
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        <p style={{
+          fontFamily: fonts.mono,
+          fontSize: '0.72rem', color: palette.cashmere, margin: 0,
+          letterSpacing: '0.08em',
+        }}>
+          &copy; 2025 {profile.name.toUpperCase()} · GIZA, EGYPT
         </p>
         <DeluxeBadge />
       </div>
-      <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{
-        background: 'rgba(200,150,62,0.1)', border: '1px solid rgba(200,150,62,0.2)', borderRadius: '999px',
-        padding: '0.5rem 1.1rem', fontSize: '0.78rem', color: colors.gold,
-        cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
-        transition: 'all 0.25s', display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-      }}>
-        <ChevronDown size={14} style={{ transform: 'rotate(180deg)' }} />
+
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="noir-back-top"
+        style={{
+          background: 'rgba(212, 175, 122, 0.06)',
+          border: `1px solid ${palette.hairlineHi}`,
+          borderRadius: 2,
+          padding: '0.6rem 1.2rem',
+          fontFamily: fonts.mono,
+          fontSize: '0.68rem', color: palette.champagne,
+          cursor: 'pointer', fontWeight: 500,
+          transition: 'all 0.3s',
+          display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+          letterSpacing: '0.12em', textTransform: 'uppercase',
+        }}
+      >
+        <ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} strokeWidth={2} />
         Back to top
       </button>
     </footer>
@@ -1340,27 +2014,40 @@ function Footer({ profile }: { profile: ProfileData }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Divider — luxe gold gradient with center diamond                   */
+/*  Divider — luxe hairline with center ornament                       */
 /* ------------------------------------------------------------------ */
 
 function Divider() {
   return (
     <div style={{
-      maxWidth: 1080, margin: '0 auto', padding: '0 2.5rem',
-      display: 'flex', alignItems: 'center', gap: '0.75rem',
+      maxWidth: 1180, margin: '0 auto', padding: '0 2.5rem',
+      display: 'flex', alignItems: 'center', gap: '0.85rem',
     }}>
       <div style={{
         flex: 1, height: 1,
-        background: 'linear-gradient(90deg, transparent, rgba(200,150,62,0.25))',
+        background: `linear-gradient(90deg, transparent, ${palette.hairline})`,
       }} />
       <div style={{
-        width: 6, height: 6, transform: 'rotate(45deg)',
-        background: colors.gold,
-        boxShadow: '0 0 8px rgba(200,150,62,0.6)',
-      }} />
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+      }}>
+        <span style={{
+          width: 4, height: 4, transform: 'rotate(45deg)',
+          background: palette.champagne,
+          boxShadow: `0 0 6px ${palette.champagne}`,
+        }} />
+        <span style={{
+          width: 2, height: 2, transform: 'rotate(45deg)',
+          background: palette.bronze,
+        }} />
+        <span style={{
+          width: 4, height: 4, transform: 'rotate(45deg)',
+          background: palette.champagne,
+          boxShadow: `0 0 6px ${palette.champagne}`,
+        }} />
+      </div>
       <div style={{
         flex: 1, height: 1,
-        background: 'linear-gradient(90deg, rgba(200,150,62,0.25), transparent)',
+        background: `linear-gradient(90deg, ${palette.hairline}, transparent)`,
       }} />
     </div>
   );
@@ -1389,9 +2076,6 @@ export default function PortfolioClient({
 }: PortfolioClientProps) {
   const [activeSection, setActiveSection] = useState('hero');
 
-  // Scroll spy — runs only on the client after hydration.
-  // All content is already server-rendered, so this hook only updates
-  // the active nav link highlight as the user scrolls.
   useEffect(() => {
     const sections = ['hero', 'about', 'experience', 'work', 'skills', 'education', 'contact'];
     const observer = new IntersectionObserver(
@@ -1414,39 +2098,41 @@ export default function PortfolioClient({
   }, []);
 
   if (!profile) {
-    // This branch is hit when the server-side safeFetchProfile() returned
-    // null — either because the DB was unreachable (Supabase paused,
-    // wrong DATABASE_URL, connection pool exhaustion) or because the
-    // Profile table is genuinely empty (fresh DB that hasn't been
-    // seeded yet). The /api/health endpoint distinguishes between these.
     return (
       <div style={{
-        minHeight: '100vh', background: colors.navy,
+        minHeight: '100vh', background: palette.onyx,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        color: colors.gray400, fontSize: '0.95rem',
+        color: palette.chiffon, fontSize: '0.95rem',
         padding: '2rem', textAlign: 'center',
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: fonts.sans,
       }}>
         <div style={{
-          fontSize: '1.3rem', color: colors.white, marginBottom: '0.75rem',
-          fontFamily: "'Syne', sans-serif", fontWeight: 600,
+          fontSize: '1.5rem', color: palette.pearl, marginBottom: '1rem',
+          fontFamily: fonts.serif, fontWeight: 400, fontStyle: 'italic',
+          fontVariationSettings: '"opsz" 144',
         }}>
           Portfolio temporarily unavailable
         </div>
-        <div style={{ maxWidth: '480px', lineHeight: 1.6 }}>
+        <div style={{
+          maxWidth: '480px', lineHeight: 1.7, color: palette.chiffon,
+          fontWeight: 300,
+        }}>
           The site couldn&apos;t reach its database on this request. This is
           usually a transient issue with the serverless database connection
           (cold start, pool exhaustion, or a paused Supabase instance) and
           should resolve within a minute. Please refresh the page.
         </div>
         <div style={{
-          marginTop: '1.5rem', fontSize: '0.8rem', opacity: 0.6,
+          marginTop: '1.75rem', fontSize: '0.78rem', opacity: 0.6,
+          fontFamily: fonts.mono, letterSpacing: '0.08em',
         }}>
           If the problem persists, the site operator can check{' '}
           <code style={{
-            background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.4rem',
-            borderRadius: '4px', fontFamily: 'monospace',
+            background: 'rgba(212, 175, 122, 0.08)',
+            border: `1px solid ${palette.hairline}`,
+            padding: '0.15rem 0.5rem', borderRadius: 2,
+            fontFamily: fonts.mono, color: palette.champagne,
           }}>
             /api/health
           </code>{' '}
@@ -1459,11 +2145,12 @@ export default function PortfolioClient({
   return (
     <div style={{
       minHeight: '100vh',
-      background: colors.navy,
-      color: colors.white,
-      fontFamily: "'DM Sans', sans-serif",
+      background: `linear-gradient(180deg, ${palette.onyx} 0%, ${palette.onyxLight} 100%)`,
+      color: palette.pearl,
+      fontFamily: fonts.sans,
       WebkitFontSmoothing: 'antialiased',
       position: 'relative',
+      overflowX: 'hidden',
     }}>
       <FilmGrainOverlay />
       <div style={{ position: 'relative', zIndex: 2 }}>
@@ -1484,84 +2171,168 @@ export default function PortfolioClient({
         <Footer profile={profile} />
       </div>
 
-      {/* Global responsive styles + Deluxe Edition animations */}
+      {/* Global responsive styles + Noir Edition animations */}
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+        @keyframes noir-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px rgba(212, 175, 122, 0.6); }
+          50% { opacity: 0.5; transform: scale(0.7); box-shadow: 0 0 4px rgba(212, 175, 122, 0.3); }
+        }
 
-        /* ---- Deluxe Edition keyframes ---- */
-        @keyframes deluxe-fade-up {
-          from { opacity: 0; transform: translateY(24px); }
+        /* ---- Noir Edition keyframes ---- */
+        @keyframes noir-fade-up {
+          from { opacity: 0; transform: translateY(28px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes deluxe-gold-shimmer {
+        @keyframes noir-shimmer {
           0%, 100% { background-position: 200% 0; }
           50%      { background-position: -200% 0; }
         }
-        @keyframes deluxe-sweep {
+        @keyframes noir-sweep {
           0%, 100% { transform: translateX(-100%); opacity: 0; }
           50%      { transform: translateX(100%); opacity: 1; }
         }
-        @keyframes deluxe-reveal-in {
-          from { opacity: 0; transform: translateY(28px); }
+        @keyframes noir-reveal-in {
+          from { opacity: 0; transform: translateY(32px); }
           to   { opacity: 1; transform: translateY(0); }
         }
 
         /* ---- ScrollReveal ---- */
-        .deluxe-reveal {
+        .noir-reveal {
           opacity: 0;
-          transform: translateY(28px);
-          transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
-                      transform 0.8s cubic-bezier(0.16,1,0.3,1);
+          transform: translateY(32px);
+          transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1),
+                      transform 0.9s cubic-bezier(0.16,1,0.3,1);
           will-change: opacity, transform;
         }
-        .deluxe-reveal--in {
+        .noir-reveal--in {
           opacity: 1;
           transform: translateY(0);
         }
 
         /* ---- Stat card shimmer on hover ---- */
-        .deluxe-stat-card:hover {
-          border-color: rgba(200,150,62,0.4) !important;
+        .noir-stat-card:hover {
+          border-color: ${palette.hairlineHi} !important;
           transform: translateY(-3px);
-          box-shadow: 0 12px 32px -8px rgba(200,150,62,0.15);
+          box-shadow: 0 16px 40px -12px rgba(212, 175, 122, 0.18);
         }
-        .deluxe-stat-card:hover .deluxe-shimmer-sweep {
+        .noir-stat-card:hover .noir-shimmer-sweep {
           opacity: 1;
         }
 
-        /* ---- CTA primary button shine on hover ---- */
-        .deluxe-cta-primary:hover {
+        /* ---- CTA primary shine on hover ---- */
+        .noir-cta-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 32px -6px rgba(200,150,62,0.55) !important;
+          box-shadow: 0 12px 40px -8px rgba(212, 175, 122, 0.55) !important;
         }
-        .deluxe-cta-primary:hover .deluxe-cta-shine {
+        .noir-cta-primary:hover .noir-cta-shine {
           transform: translateX(100%);
         }
 
-        /* ---- Existing hover states (kept) ---- */
-        .stat-card-hover:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-2px); }
-        .principle-card:hover { border-color: rgba(200,150,62,0.3) !important; transform: translateY(-2px); }
-        .project-card { transition: all 0.35s cubic-bezier(0.16,1,0.3,1); }
-        .project-card:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-4px); box-shadow: 0 16px 40px -12px rgba(200,150,62,0.15); }
-        .project-card:hover img { transform: scale(1.08); }
-        .contact-card { transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-        .contact-card:hover { border-color: rgba(200,150,62,0.4) !important; transform: translateY(-3px); box-shadow: 0 12px 32px -8px rgba(200,150,62,0.12); }
+        /* ---- CTA secondary ---- */
+        .noir-cta-secondary:hover {
+          border-color: ${palette.champagne} !important;
+          background: rgba(212, 175, 122, 0.06);
+        }
 
-        /* ---- Reduced motion: disable all deluxe animations ---- */
+        /* ---- Pill (contact in About) ---- */
+        .noir-pill:hover {
+          border-color: ${palette.hairlineHi} !important;
+          background: ${palette.graphite};
+          color: ${palette.pearl};
+        }
+
+        /* ---- Nav links underline ---- */
+        .noir-nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: -2px; left: 50%;
+          width: 0; height: 1px;
+          background: ${palette.champagne};
+          transition: width 0.3s, left 0.3s;
+        }
+        .noir-nav-link:hover::after,
+        .noir-nav-link[style*="color: #d4af7a"]::after {
+          width: 18px; left: calc(50% - 9px);
+        }
+
+        /* ---- Principle cards ---- */
+        .noir-principle-card:hover {
+          border-color: ${palette.hairlineHi} !important;
+          transform: translateY(-3px);
+          background: linear-gradient(170deg, ${palette.graphite}, ${palette.charcoal}) !important;
+        }
+
+        /* ---- Project cards ---- */
+        .noir-project-card { transition: all 0.45s cubic-bezier(0.16,1,0.3,1); }
+        .noir-project-card:hover {
+          border-color: ${palette.hairlineHi} !important;
+          transform: translateY(-6px);
+          box-shadow: 0 24px 48px -16px rgba(212, 175, 122, 0.18);
+        }
+        .noir-project-card:hover img {
+          transform: scale(1.06);
+        }
+
+        /* ---- Skill cards ---- */
+        .noir-skill-card {
+          transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .noir-skill-card:hover {
+          border-color: ${palette.hairlineHi} !important;
+          transform: translateY(-3px);
+        }
+
+        /* ---- Education cards ---- */
+        .noir-edu-card {
+          transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .noir-edu-card:hover {
+          border-color: ${palette.hairlineHi} !important;
+        }
+
+        /* ---- Contact cards ---- */
+        .noir-contact-card { transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+        .noir-contact-card:hover {
+          border-color: ${palette.champagne} !important;
+          transform: translateY(-4px);
+          box-shadow: 0 16px 40px -12px rgba(212, 175, 122, 0.18);
+        }
+        .noir-contact-card:hover .noir-arrow {
+          color: ${palette.champagne};
+          transform: translate(2px, -2px);
+        }
+        .noir-arrow { transition: all 0.3s; }
+
+        /* ---- Experience rows ---- */
+        .noir-exp-row {
+          transition: background 0.3s;
+        }
+        .noir-exp-row:hover {
+          background: rgba(212, 175, 122, 0.02);
+        }
+
+        /* ---- Back to top button ---- */
+        .noir-back-top:hover {
+          background: rgba(212, 175, 122, 0.12);
+          border-color: ${palette.champagne} !important;
+          transform: translateY(-2px);
+        }
+
+        /* ---- Reduced motion: disable all noir animations ---- */
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
           }
-          .deluxe-reveal { opacity: 1 !important; transform: none !important; }
+          .noir-reveal { opacity: 1 !important; transform: none !important; }
         }
 
         /* Mobile responsive */
         @media (max-width: 768px) {
           .hero-section {
             grid-template-columns: 1fr !important;
-            gap: 2.5rem !important;
+            gap: 3rem !important;
             padding: 7rem 1.25rem 3rem !important;
           }
           .hero-stats {
@@ -1592,14 +2363,15 @@ export default function PortfolioClient({
           .contact-grid {
             grid-template-columns: 1fr !important;
           }
+          .noir-exp-row {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+          }
         }
 
         @media (max-width: 480px) {
           .hero-section h1 {
-            font-size: 2rem !important;
-          }
-          .hero-section .stat-card-hover {
-            padding: 1rem !important;
+            font-size: 2.4rem !important;
           }
         }
       `}</style>

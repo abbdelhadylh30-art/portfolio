@@ -80,7 +80,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a1628",
+  themeColor: "#08080c",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -107,8 +107,10 @@ export default function RootLayout({
         <link rel="icon" href="/icons/favicon-32x32.png" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
-        {/* Google Fonts for Syne (display) + DM Sans (body) — loaded
-            in <head> so they apply to every page, including SSR ones. */}
+        {/* Google Fonts — Fraunces (editorial serif display),
+            DM Sans (body), JetBrains Mono (eyebrow/labels).
+            Loaded in <head> via preconnect+stylesheet for SSR-friendly
+            font application across every page. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -116,7 +118,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,500;1,9..144,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
 
@@ -150,7 +152,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0B1120] text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#08080c] text-[#faf8f4]`}
       >
         {children}
         <Toaster />
