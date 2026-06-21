@@ -346,3 +346,50 @@ Stage Summary:
 - Once the user fixes DATABASE_URL, the dashboard's content management features (CRUD on profile/projects/experiences/etc.) will also work.
 - To rotate the password: run `npx tsx scripts/generate-password-hash.ts`, paste the hash as ADMIN_PASSWORD_HASH in Vercel → Redeploy.
 - Pending user actions: (1) fix DATABASE_URL on Vercel, (2) optionally set ADMIN_PASSWORD_HASH to a strong custom password.
+
+---
+Task ID: 10
+Agent: Main Agent
+Task: User provided scoped Vercel API token + Supabase DB password — fix all env vars and verify end-to-end.
+
+Work Log:
+- User provided Vercel API token (scoped to portfolio project, 24h expiry).
+- User provided Supabase connection string template: postgresql://postgres.trklgpgtctwiibgeicjx:****@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+- User provided DB password separately.
+- Tested token via GET /v4/projects — confirmed access to portfolio-z258 (prj_AoHcu9qEcGenVxpywfz6JxXyledv).
+- Inspected existing env vars: only 1 var (DATABASE_URL) was configured, and it was marked as "sensitive" — Vercel doesn't return the value via API, but /api/health had already confirmed it was malformed (didn't start with postgresql://).
+- Generated fresh credentials:
+    AUTH_SECRET = 32-byte base64 random
+    New admin password = 16-char alphanumeric (M58wUgv6IurtZ16p)
+    ADMIN_PASSWORD_HASH = bcrypt hash of new password
+- Deleted the broken DATABASE_URL env var.
+- Created 5 new env vars on Vercel (target=production+preview):
+    DATABASE_URL           (encrypted) — full Supabase pooler URL with ?pgbouncer=true&connection_limit=1
+    AUTH_SECRET            (encrypted) — fresh 32-byte secret
+    ADMIN_USERNAME         (plain)     — "admin"
+    ADMIN_PASSWORD_HASH    (encrypted) — bcrypt hash
+    NEXT_PUBLIC_SITE_URL   (plain)     — https://portfolio-z258.vercel.app
+- Triggered production redeploy via POST /v13/deployments with deploymentId of latest deploy. Build completed in ~30s.
+- Verified /api/health — ok=true, profile.count() returned 1 row in 960ms. ✓
+- Verified homepage — 132KB, 9,223 chars of visible text, all sections rendered. ✓
+- Verified sitemap.xml + robots.txt — using real https://portfolio-z258.vercel.app URL. ✓
+- BUG: Login with new password failed. Diagnosed: bash sourcing of .env mangled the bcrypt hash ($2b, $10, $c9D... interpreted as variable refs and expanded to empty). The mangled value got sent to Vercel.
+- Fix: re-read the correct hash directly from .env via Python (no shell expansion), deleted the mangled env var, re-created it with the correct value.
+- Triggered another redeploy. Build completed in ~30s.
+- Final verification:
+    /api/health: ok=true ✓
+    /api/auth with new password (M58wUgv6IurtZ16p): 200 + valid JWT ✓
+    /api/auth with old password (admin123): 401 (intended — fallback hash overridden) ✓
+    Homepage: 132KB, all content rendered ✓
+- Took screenshot at /home/z/my-project/download/portfolio-FINAL-fixed.png.
+
+Stage Summary:
+- All env vars properly set on Vercel.
+- Site fully operational: SSR-rendered, DB-connected, auth-working, SEO metadata correct.
+- New admin credentials:
+    URL: https://portfolio-z258.vercel.app/dashboard
+    Username: admin
+    Password: M58wUgv6IurtZ16p
+- Old admin123 password no longer works (intentional rotation).
+- User should still revoke the Vercel API token at https://vercel.com/account/tokens since the work is done.
+- Lessons learned: bcrypt hashes contain $ characters that bash will expand as variable references when sourcing .env files unquoted. Always read such values via Python or with single-quoted heredocs.
