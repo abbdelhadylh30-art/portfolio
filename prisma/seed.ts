@@ -1,6 +1,6 @@
 // Set DATABASE_URL before any imports so Prisma Client picks it up
 // Use direct connection (port 5432) for seeding — PgBouncer (6543) doesn't support transactions needed for upserts
-process.env.DATABASE_URL = 'postgresql://postgres.trklgpgtctwiibgeicjx:Medhat23568914@aws-0-eu-west-1.pooler.supabase.com:5432/postgres';
+// DATABASE_URL comes from the environment (sqlite seed db for Vercel)
 
 import { PrismaClient } from '@prisma/client';
 
