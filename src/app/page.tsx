@@ -56,6 +56,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = profile?.title ?? FALLBACK_TITLE;
   const bio = profile?.bio ?? FALLBACK_BIO;
 
+  // Clamp SERP metadata to Google's display limits (title ≤60, desc ≤160),
+  // cutting on word boundaries so text never truncates mid-word.
+  const clamp = (s: string, n: number) => {
+    const flat = s.replace(/\s+/g, " ").trim();
+    if (flat.length <= n) return flat;
+    const cut = flat.slice(0, n - 1);
+    const sp = cut.lastIndexOf(" ");
+    return (sp > Math.floor(n * 0.6) ? cut.slice(0, sp) : cut) + "…";
+  };
+  const metaTitle = clamp(`${name} — ${title}`, 60);
+  const metaDesc = clamp(bio, 157);
+
   // Build metadataBase safely — bad URLs in env vars must not throw.
   // SITE_URL is already validated in site-url.ts, so this won't throw,
   // but we keep the try/catch as defense-in-depth.
@@ -67,8 +79,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   return {
-    title: `${name} — ${title}`,
-    description: bio,
+    title: metaTitle,
+    description: metaDesc,
     keywords: [
       name,
       "Marketing",
@@ -90,8 +102,8 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: "/",
     },
     openGraph: {
-      title: `${name} — ${title}`,
-      description: bio,
+      title: metaTitle,
+      description: metaDesc,
       type: "profile",
       siteName: `${name} Portfolio`,
       url: SITE_URL,
@@ -106,8 +118,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${name} — ${title}`,
-      description: bio,
+      title: metaTitle,
+      description: metaDesc,
       images: ["/images/hero-bg.jpg"],
     },
   };
