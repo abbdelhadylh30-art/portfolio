@@ -18,6 +18,7 @@ import {
   Megaphone,
   TrendingUp,
   Handshake,
+  MessageCircle,
   Globe,
   Settings,
   GraduationCap,
@@ -132,7 +133,7 @@ const palette = {
   pearl: '#faf8f4',
   silk: '#e8e4dc',
   chiffon: '#b8b3a8',
-  cashmere: '#8a8278',
+  cashmere: '#989183',
   stone: '#5a5347',
 
   // Champagne / copper / bronze accents
@@ -140,7 +141,9 @@ const palette = {
   champagneHi: '#e6c79f',
   champagneGlow: '#f4dcb5',
   copper: '#b87333',
-  bronze: '#8a6e4b',
+  // Brightened bronze — passes WCAG AA (≥4.5:1) on every surface it
+  // appears on (onyx → graphiteHi). Previously #8a6e4b (3.2–4.2:1).
+  bronze: '#a8875e',
   bronzeDark: '#5a4730',
 
   // Hairlines / surfaces
@@ -1290,8 +1293,14 @@ function ExperienceSection({ experiences }: { experiences: ExperienceData[] }) {
 /* ------------------------------------------------------------------ */
 
 function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaigns: CampaignData[] }) {
-  const [activeProject, setActiveProject] = useState<string | null>(null);
-  const selectedCampaign = campaigns.find(c => c.projectId === activeProject);
+  //
+  //  Campaign Spotlight: previously this required clicking a card to
+  //  activate (setActiveProject was never wired up), so the spotlight
+  //  — and the campaign content behind it — was invisible. It now
+  //  defaults to the first campaign in the DB so the featured concept
+  //  always renders beneath the project grid.
+  //
+  const selectedCampaign = campaigns[0];
 
   return (
     <section id="work" style={{
@@ -1441,6 +1450,77 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
             </Link>
           );
         })}
+
+        {/* Sixth slot — editorial CTA card: fills the grid and gives the
+            section a conversion path (full deck / references on request). */}
+        <button
+          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+          className="noir-project-card"
+          style={{
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            background: 'linear-gradient(170deg, rgba(28,26,36,0.55), rgba(15,14,20,0.35))',
+            border: `1px dashed ${palette.hairlineHi}`,
+            borderRadius: 4, overflow: 'hidden',
+            transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+            textAlign: 'left', cursor: 'pointer',
+            padding: '1.65rem 1.65rem 1.5rem',
+            minHeight: 260,
+            position: 'relative',
+          }}
+        >
+          <span style={{
+            position: 'absolute', top: 0, left: 0,
+            width: 14, height: 14,
+            borderTop: `1px solid ${palette.champagne}`,
+            borderLeft: `1px solid ${palette.champagne}`,
+            opacity: 0.7,
+          }} />
+          <span style={{
+            position: 'absolute', bottom: 0, right: 0,
+            width: 14, height: 14,
+            borderBottom: `1px solid ${palette.champagne}`,
+            borderRight: `1px solid ${palette.champagne}`,
+            opacity: 0.7,
+          }} />
+          <div>
+            <div style={{
+              fontFamily: fonts.mono,
+              fontSize: '0.65rem', fontWeight: 500,
+              color: palette.bronze, letterSpacing: '0.16em',
+              marginBottom: '1.1rem',
+            }}>
+              0{projects.length + 1}
+            </div>
+            <h3 style={{
+              fontFamily: fonts.serif, fontWeight: 500, fontSize: '1.2rem',
+              color: palette.pearl, marginBottom: '0.6rem', lineHeight: 1.3,
+              letterSpacing: '-0.02em', fontVariationSettings: '"opsz" 144',
+            }}>
+              The full deck.
+            </h3>
+            <p style={{
+              fontSize: '0.86rem', color: palette.chiffon, lineHeight: 1.65,
+              fontWeight: 300, fontFamily: fonts.sans,
+            }}>
+              Complete audits, deck walkthroughs and references behind every
+              project here — available on request, along with the stories
+              behind the numbers.
+            </p>
+          </div>
+          <span style={{
+            marginTop: '1.4rem',
+            display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+            background: `linear-gradient(135deg, ${palette.champagne}, ${palette.champagneHi})`,
+            color: palette.onyx,
+            borderRadius: 2, padding: '0.4rem 0.8rem',
+            fontFamily: fonts.mono,
+            fontSize: '0.62rem', fontWeight: 600,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            alignSelf: 'flex-start',
+          }}>
+            Get in touch <ArrowUpRight size={11} strokeWidth={2} />
+          </span>
+        </button>
       </div>
 
       {/* Campaign Spotlight */}
@@ -1545,6 +1625,35 @@ function WorkSection({ projects, campaigns }: { projects: ProjectData[]; campaig
 /* ------------------------------------------------------------------ */
 
 function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
+  //
+  //  Bars animate from 0 → target the first time the grid scrolls into
+  //  view. One observer on the grid container drives the whole section.
+  //
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [barsIn, setBarsIn] = useState(false);
+
+  useEffect(() => {
+    const node = gridRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setBarsIn(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setBarsIn(true);
+            obs.disconnect();
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <section id="skills" style={{
       padding: '7rem 2.5rem', maxWidth: 1180, margin: '0 auto',
@@ -1558,7 +1667,7 @@ function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
         Skills
       </SectionHeading>
 
-      <div className="skills-grid" style={{
+      <div ref={gridRef} className="skills-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '1.5rem',
@@ -1614,7 +1723,11 @@ function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {skillList.map((skill, si) => {
-                  const width = barWidths[skill] || Math.floor(Math.random() * 30 + 50);
+                  // Deterministic fallback — Math.random() here caused a
+                  // potential SSR/client hydration mismatch for unmapped
+                  // skills (server and client rolled different numbers).
+                  const width = barWidths[skill] || 65;
+                  const animWidth = barsIn ? width : 0;
                   return (
                     <div key={si}>
                       <div style={{
@@ -1642,8 +1755,9 @@ function SkillsSection({ skills }: { skills: SkillCategoryData[] }) {
                         <div style={{
                           height: '100%',
                           background: `linear-gradient(90deg, ${palette.bronze}, ${palette.champagne}, ${palette.champagneHi})`,
-                          width: `${width}%`,
-                          transition: 'width 1s cubic-bezier(0.16,1,0.3,1)',
+                          width: `${animWidth}%`,
+                          transition: 'width 1.1s cubic-bezier(0.16,1,0.3,1)',
+                          transitionDelay: `${si * 70}ms`,
                           boxShadow: `0 0 8px rgba(212, 175, 122, 0.4)`,
                         }} />
                       </div>
@@ -1896,7 +2010,8 @@ function ContactSection({ profile }: { profile: ProfileData }) {
         {[
           { icon: <Mail size={20} strokeWidth={1.5} />, label: 'Send an email', value: profile.email, href: `mailto:${profile.email}` },
           { icon: <Linkedin size={20} strokeWidth={1.5} />, label: 'LinkedIn', value: 'LinkedIn Profile', href: `https://linkedin.com/in/${profile.linkedin}` },
-          { icon: <Phone size={20} strokeWidth={1.5} />, label: 'Phone', value: profile.phone, href: `tel:${profile.phone}` },
+          { icon: <MessageCircle size={20} strokeWidth={1.5} />, label: 'WhatsApp', value: 'Chat directly', href: `https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}` },
+          { icon: <Phone size={20} strokeWidth={1.5} />, label: 'Phone', value: profile.phone, href: `tel:${profile.phone.replace(/[^0-9+]/g, '')}` },
         ].map((item, i) => (
           <a
             key={i}
@@ -1963,6 +2078,16 @@ function ContactSection({ profile }: { profile: ProfileData }) {
 /* ------------------------------------------------------------------ */
 
 function Footer({ profile }: { profile: ProfileData }) {
+  // Dynamic year — the © used to be hardcoded to 2025.
+  const year = new Date().getFullYear();
+  const footerLinks = [
+    { id: 'about', label: 'About' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'work', label: 'Work' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'contact', label: 'Contact' },
+  ];
+
   return (
     <footer style={{
       borderTop: `1px solid ${palette.hairline}`,
@@ -1985,10 +2110,35 @@ function Footer({ profile }: { profile: ProfileData }) {
           fontSize: '0.72rem', color: palette.cashmere, margin: 0,
           letterSpacing: '0.08em',
         }}>
-          &copy; 2025 {profile.name.toUpperCase()} · GIZA, EGYPT
+          &copy; {year} {profile.name.toUpperCase()} · GIZA, EGYPT
         </p>
         <DeluxeBadge />
       </div>
+
+      {/* Quick section links */}
+      <nav aria-label="Footer" style={{
+        display: 'flex', gap: '1.4rem', flexWrap: 'wrap',
+        alignItems: 'center',
+      }}>
+        {footerLinks.map(l => (
+          <button
+            key={l.id}
+            onClick={() => document.getElementById(l.id)?.scrollIntoView({ behavior: 'smooth' })}
+            className="noir-nav-link"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: fonts.mono,
+              fontSize: '0.66rem', fontWeight: 500,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: palette.chiffon,
+              transition: 'color 0.3s',
+              position: 'relative', padding: '0.25rem 0',
+            }}
+          >
+            {l.label}
+          </button>
+        ))}
+      </nav>
 
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -2153,6 +2303,33 @@ export default function PortfolioClient({
       overflowX: 'hidden',
     }}>
       <FilmGrainOverlay />
+
+      {/* WhatsApp quick-chat — Egypt recruiters live on WhatsApp.
+          Uses the real phone number from the profile record. */}
+      {profile && (
+        <a
+          href={`https://wa.me/${profile.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hi Mohamed — I found your portfolio and I'd like to talk.")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat on WhatsApp"
+          className="noir-wa-fab"
+          style={{
+            position: 'fixed', bottom: '1.4rem', right: '1.4rem', zIndex: 90,
+            width: 48, height: 48, borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(28,26,36,0.92), rgba(15,14,20,0.92))',
+            border: `1px solid ${palette.hairlineHi}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: palette.champagne,
+            boxShadow: '0 10px 30px -8px rgba(0,0,0,0.55), 0 0 0 1px rgba(212,175,122,0.08)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+          }}
+        >
+          <MessageCircle size={20} strokeWidth={1.5} />
+        </a>
+      )}
+
       <div style={{ position: 'relative', zIndex: 2 }}>
         <Navigation activeSection={activeSection} />
         <HeroSection profile={profile} />
@@ -2318,6 +2495,13 @@ export default function PortfolioClient({
           transform: translateY(-2px);
         }
 
+        /* ---- WhatsApp FAB ---- */
+        .noir-wa-fab:hover {
+          transform: translateY(-3px);
+          border-color: ${palette.champagne} !important;
+          box-shadow: 0 14px 34px -8px rgba(0,0,0,0.6), 0 0 18px rgba(212, 175, 122, 0.25);
+        }
+
         /* ---- Reduced motion: disable all noir animations ---- */
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
@@ -2335,9 +2519,6 @@ export default function PortfolioClient({
             gap: 3rem !important;
             padding: 7rem 1.25rem 3rem !important;
           }
-          .hero-stats {
-            order: -1;
-          }
           .desktop-nav {
             display: none !important;
           }
@@ -2351,6 +2532,9 @@ export default function PortfolioClient({
           .projects-grid {
             grid-template-columns: 1fr !important;
           }
+          /* Name + intro + CTAs come FIRST on mobile — the stat rail
+             used to jump above the hero copy (order:-1), burying the
+             actual introduction below four cards. */
           .skills-grid {
             grid-template-columns: 1fr !important;
           }
