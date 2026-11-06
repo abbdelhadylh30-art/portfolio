@@ -109,7 +109,9 @@ export async function generateMetadata(): Promise<Metadata> {
       url: SITE_URL,
       images: [
         {
-          url: "/images/hero-bg.jpg",
+          // Current-design cover (champagne noir hero) — replaces the
+          // old navy/gold hero-bg.jpg that predated the v3 redesign.
+          url: "/images/og-cover.jpg",
           width: 1200,
           height: 630,
           alt: `${name} — ${title}`,
@@ -120,7 +122,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: metaTitle,
       description: metaDesc,
-      images: ["/images/hero-bg.jpg"],
+      images: ["/images/og-cover.jpg"],
     },
   };
 }
